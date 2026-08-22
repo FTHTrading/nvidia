@@ -240,7 +240,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (finalTranscript) {
-        promptInput.value = (promptInput.value + ' ' + finalTranscript).trim();
+        promptInput.value = finalTranscript.trim();
+        stopListening();
+        sendMessage();
       } else if (interimTranscript) {
         promptInput.placeholder = interimTranscript;
       }
