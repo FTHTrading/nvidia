@@ -294,54 +294,54 @@
         </div>
       </div>
 
-      <!-- View Tab: NVIDIA NemoClaw Sandbox Studio -->
+      <!-- View Tab: Standalone Local Sandbox & Execution Studio -->
       <div class="tab-view" id="tab-nemoclaw">
         <div class="workspace-header">
           <div class="view-title">
-            <h2>NVIDIA NemoClaw Sandbox & Brev Integration</h2>
-            <p>Guided setup, NeMo guardrailed execution, and automated agent pairing</p>
+            <h2>NVIDIA NemoClaw & Standalone Local Execution Studio</h2>
+            <p>100% local container execution, NeMo guardrails, and zero-cloud-credit dependency</p>
           </div>
           <div class="view-actions">
-            <span class="badge badge-live">SANDBOX INSTALLED</span>
+            <span class="badge badge-live">LOCAL RUNTIME READY</span>
           </div>
         </div>
 
         <div class="card glass-card margin-bottom-card">
-          <h3><i class="fa-solid fa-shield-halved highlight"></i> Canonical Brev Host & Sandbox Bootstrap</h3>
+          <h3><i class="fa-solid fa-shield-halved highlight"></i> Standalone Computer Execution Engine</h3>
           <p style="margin-top: 6px; color: var(--text-muted); font-size: 13px;">
-            NemoClaw and its sandbox container images are preinstalled. Pairs Antigravity IDE and your 6-key NVIDIA NIM pool directly with the Brev sandbox execution environment without storing credentials in public chats.
+            Your entire system (NVIDIA Work Desk, 6-Key NIM Load Balancer, Swarm Orchestrator, and Voice Studio) runs <strong>100% locally on your computer</strong> and <strong>100% free on GitHub Pages</strong>. It connects directly to NVIDIA NIM APIs using your 6 active keys, requiring <strong>zero cloud VM credits</strong> or third-party hosting dependencies.
           </p>
         </div>
 
         <div class="mot-experts-grid">
           <div class="card glass-card">
-            <h3><i class="fa-solid fa-terminal highlight"></i> Starter Prompt & Context</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Copy NemoClaw canonical Starter Prompt with connection context appended.</p>
+            <h3><i class="fa-solid fa-terminal highlight"></i> Local Execution Context</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Local terminal execution and NVIDIA NIM API pool status.</p>
 
             <div class="form-group">
-              <label>Connection Context</label>
-              <input type="text" value="Brev Host Connected | NemoClaw Sandbox Active | 6 NIM Keys Synced" readonly class="input-full-readonly" style="font-family: 'Fira Code', monospace; font-size: 11px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); padding: 8px; border-radius: 6px; color: var(--nvidia-green-light); width: 100%;">
+              <label>Execution Mode</label>
+              <input type="text" value="Local Computer Execution | 6/6 Active NIM Keys | Zero Cloud Credit Cost" readonly class="input-full-readonly" style="font-family: 'Fira Code', monospace; font-size: 11px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); padding: 8px; border-radius: 6px; color: var(--nvidia-green-light); width: 100%;">
             </div>
 
             <button id="copyNemoPromptBtn" class="btn-primary full-width margin-top-card">
-              <i class="fa-solid fa-copy"></i> Copy NemoClaw Starter Prompt
+              <i class="fa-solid fa-copy"></i> Copy Local Execution Prompt
             </button>
           </div>
 
           <div class="card glass-card">
-            <h3><i class="fa-solid fa-sliders highlight"></i> Onboarding Path</h3>
+            <h3><i class="fa-solid fa-sliders highlight"></i> Local Agent Dispatch</h3>
             
             <div class="form-group">
-              <label>Setup Mode</label>
+              <label>Local Dispatch Mode</label>
               <select id="nemoSetupMode" class="select-full" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); color: #fff; border-radius: 6px;">
-                <option value="guided" selected>Option 1: Guided Setup with Antigravity Coding Agent</option>
-                <option value="browser">Option 2: Browser Setup & Progress Stream</option>
-                <option value="ssh">Option 3: Human-operated SSH Path</option>
+                <option value="guided" selected>Option 1: Antigravity Local Execution Engine (Recommended)</option>
+                <option value="browser">Option 2: Local Docker Container Sandbox</option>
+                <option value="ssh">Option 3: Local Terminal Task Worker</option>
               </select>
             </div>
 
             <button id="launchNemoSetupBtn" class="btn-secondary full-width margin-top-card">
-              <i class="fa-solid fa-rocket"></i> Launch Guided NemoClaw Onboarding
+              <i class="fa-solid fa-rocket"></i> Dispatch Standalone Local Agent Task
             </button>
 
             <div id="nemoStatusOutput" class="mot-analysis-text hidden"></div>
