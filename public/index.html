@@ -100,6 +100,11 @@
           </div>
 
           <div class="setting-item">
+            <label for="continuousVoiceToggle"><i class="fa-solid fa-arrows-rotate text-green"></i> Continuous Hands-Free Loop</label>
+            <input type="checkbox" id="continuousVoiceToggle" checked>
+          </div>
+
+          <div class="setting-item">
             <label for="voiceRate"><i class="fa-solid fa-gauge-high"></i> Speech Rate</label>
             <input type="range" id="voiceRate" min="0.7" max="1.5" step="0.1" value="1.0">
           </div>
@@ -120,6 +125,11 @@
         <button class="menu-item active" data-tab="reasoning">
           <i class="fa-solid fa-brain"></i>
           <span>Nemotron Reasoning Desk</span>
+        </button>
+
+        <button class="menu-item" data-tab="swarm">
+          <i class="fa-solid fa-network-wired"></i>
+          <span>Live Swarm & Work Monitor</span>
         </button>
 
         <button class="menu-item" data-tab="mot">
@@ -209,6 +219,55 @@
                 <span>Send</span>
                 <i class="fa-solid fa-paper-plane"></i>
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View Tab: Live Swarm & Work Monitor -->
+      <div class="tab-view" id="tab-swarm">
+        <div class="workspace-header">
+          <div class="view-title">
+            <h2>Live AI Agent Swarm & Task Monitor</h2>
+            <p>Real-time telemetry and task dispatch for 5 autonomous worker agents</p>
+          </div>
+          <div class="view-actions">
+            <button id="refreshSwarmBtn" class="btn-primary"><i class="fa-solid fa-rotate"></i> Refresh Telemetry</button>
+          </div>
+        </div>
+
+        <div class="mot-experts-grid">
+          <div class="card glass-card">
+            <h3><i class="fa-solid fa-hammer highlight"></i> Dispatch Autonomous Work Task</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Send an instruction directly to your local AI worker agents.</p>
+
+            <div class="form-group">
+              <label>Select Target AI Worker (Employee)</label>
+              <select id="swarmWorkerSelect" class="select-full" style="width: 100%; padding: 8px; background: #121619; color: #fff; border: 1px solid var(--border-glass); border-radius: 6px;">
+                <option value="agent-code-builder">🛠️ Code Builder & Developer Agent (Git & Code)</option>
+                <option value="agent-nemoclaw-sandbox">🛡️ Standalone Local Sandbox Agent (Local Runtime)</option>
+                <option value="agent-infra-dns">🌐 Infrastructure & Cloudflare DNS Agent (nil33.com)</option>
+                <option value="agent-qa-healing">🩺 QA & Self-Healing Agent (Log Audit & Fixes)</option>
+                <option value="agent-rwa-treasury">💎 RWA & Treasury Agent (Asset Telemetry)</option>
+              </select>
+            </div>
+
+            <div class="form-group margin-top-card">
+              <label>Task Prompt / Instruction</label>
+              <textarea id="swarmTaskInput" rows="3" placeholder="Audit local server logs and compile latest build updates..."></textarea>
+            </div>
+
+            <button id="dispatchSwarmTaskBtn" class="btn-primary full-width margin-top-card">
+              <i class="fa-solid fa-paper-plane"></i> Dispatch Task to AI Agent
+            </button>
+
+            <div id="swarmDispatchOutput" class="mot-analysis-text hidden"></div>
+          </div>
+
+          <div class="card glass-card">
+            <h3><i class="fa-solid fa-chart-line highlight"></i> Active Worker Telemetry</h3>
+            <div id="swarmWorkerList" class="info-list" style="margin-top: 10px;">
+              <p><i class="fa-solid fa-spinner fa-spin"></i> Loading worker status...</p>
             </div>
           </div>
         </div>
