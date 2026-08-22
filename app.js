@@ -70,24 +70,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if ('speechSynthesis' in window) {
       availableVoices = speechSynthesis.getVoices();
       
-      // Sort and prioritize Neural, Natural, Google, Apple, Microsoft English Voices
+      // Sort and prioritize James, Guy, David, Natural, Neural, Google, Apple, Microsoft English Voices
       availableVoices.sort((a, b) => {
         const nameA = a.name.toLowerCase();
         const nameB = b.name.toLowerCase();
         
-        const scoreA = (nameA.includes('natural') ? 15 : 0) +
-                       (nameA.includes('neural') ? 15 : 0) +
+        const scoreA = (nameA.includes('james') ? 30 : 0) +
+                       (nameA.includes('natural') ? 20 : 0) +
+                       (nameA.includes('neural') ? 20 : 0) +
+                       (nameA.includes('guy') || nameA.includes('david') || nameA.includes('george') ? 15 : 0) +
                        (nameA.includes('google us english') ? 12 : 0) +
-                       (nameA.includes('samantha') ? 10 : 0) +
-                       (nameA.includes('microsoft guy') || nameA.includes('microsoft jenny') ? 10 : 0) +
+                       (nameA.includes('microsoft') ? 10 : 0) +
                        (a.lang.startsWith('en-US') ? 8 : 0) +
                        (a.lang.startsWith('en') ? 4 : 0);
 
-        const scoreB = (nameB.includes('natural') ? 15 : 0) +
-                       (nameB.includes('neural') ? 15 : 0) +
+        const scoreB = (nameB.includes('james') ? 30 : 0) +
+                       (nameB.includes('natural') ? 20 : 0) +
+                       (nameB.includes('neural') ? 20 : 0) +
+                       (nameB.includes('guy') || nameB.includes('david') || nameB.includes('george') ? 15 : 0) +
                        (nameB.includes('google us english') ? 12 : 0) +
-                       (nameB.includes('samantha') ? 10 : 0) +
-                       (nameB.includes('microsoft guy') || nameB.includes('microsoft jenny') ? 10 : 0) +
+                       (nameB.includes('microsoft') ? 10 : 0) +
                        (b.lang.startsWith('en-US') ? 8 : 0) +
                        (b.lang.startsWith('en') ? 4 : 0);
 
@@ -95,13 +97,20 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (voiceSelect) {
+        const prevValue = voiceSelect.value;
         voiceSelect.innerHTML = '';
         availableVoices.forEach((v, index) => {
           const option = document.createElement('option');
           option.value = v.name;
+          const isJames = v.name.toLowerCase().includes('james');
           const isNeural = v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('neural') || v.name.toLowerCase().includes('google');
-          option.textContent = `${v.name} ${isNeural ? '✨ [Natural Neural]' : ''}`;
-          if (index === 0) option.selected = true;
+          option.textContent = `${v.name} ${isJames ? '🎙️ [James Male Voice]' : (isNeural ? '✨ [Natural Neural]' : '')}`;
+          
+          if (prevValue && prevValue === v.name) {
+            option.selected = true;
+          } else if (!prevValue && (isJames || index === 0)) {
+            option.selected = true;
+          }
           voiceSelect.appendChild(option);
         });
       }
@@ -224,7 +233,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     rec.onerror = (event) => {
       console.warn('Speech recognition error:', event.error);
-      stopListening();
+      if (event.error === 'no-speech') {
+        if (isListening) {
+          setTimeout(() => { try { rec.start(); } catch (e) {} }, 300);
+        }
+      } else {
+        stopListening();
+      }
     };
 
     rec.onend = () => {
@@ -236,6 +251,16 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     return rec;
+  }
+
+  // Test Selected Voice Button Handler
+  const testVoiceBtn = document.getElementById('testVoiceBtn');
+  if (testVoiceBtn) {
+    testVoiceBtn.addEventListener('click', () => {
+      unlockAudioEngine();
+      const selectedVoiceName = voiceSelect ? voiceSelect.value : 'James';
+      speak(`Hello, I am your NVIDIA AI Voice Assistant. ${selectedVoiceName} voice synthesis is online and active.`);
+    });
   }
 
   function startListening() {
