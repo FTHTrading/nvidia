@@ -4,7 +4,13 @@ import cors from 'cors';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// Enable full CORS for all origins and headers
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static('public'));
 
@@ -67,7 +73,7 @@ app.post('/api/chat/completions', async (req, res) => {
   const isStream = body.stream === true;
   const requestedModel = body.model || 'nvidia/nemotron-3.5-lightning-30b-a3b';
 
-  // Candidate models to try in sequence if requested model fails or returns 404
+  // Candidate models to try in sequence if requested model fails
   const candidateModels = [
     requestedModel,
     'nvidia/nemotron-3.5-lightning-30b-a3b',
@@ -75,9 +81,7 @@ app.post('/api/chat/completions', async (req, res) => {
     'meta/llama-3.3-70b-instruct'
   ];
 
-  // Deduplicate array preserving order
   const uniqueCandidates = [...new Set(candidateModels)];
-
   let response = null;
 
   for (const modelToTry of uniqueCandidates) {
@@ -115,7 +119,6 @@ app.post('/api/chat/completions', async (req, res) => {
     if (response && response.ok) break;
   }
 
-  // Graceful response guaranteed even under network issues
   if (!response || !response.ok) {
     if (isStream) {
       res.setHeader('Content-Type', 'text/event-stream');
@@ -169,7 +172,7 @@ app.post('/api/prompt-upsample', async (req, res) => {
   const apiKey = getNextKey();
 
   const systemMessage = mode === 'cosmos' 
-    ? "You are an expert NVIDIA Cosmos 3 Physical AI prompt generator. Expand the user's short description into a rich, detailed, physics-grounded scene description suitable for text-to-video world generation. Focus on dynamic motion, camera angles, lighting, spatial depth, and physically realistic interactions. Output ONLY the expanded prompt."
+    ? "You are an expert NVIDIA Cosmos 3 Physical AI prompt generator. Expand the user's short description into a rich, detailed, physics-grounded scene description suitable for text-to-video world generation. Output ONLY the expanded prompt."
     : "You are an expert AI prompt upsampler powered by NVIDIA Nemotron. Expand the user's request into a highly detailed, structured, precise instruction for complex AI reasoning and coding. Output ONLY the enhanced prompt.";
 
   try {

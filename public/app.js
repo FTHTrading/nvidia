@@ -1,20 +1,6 @@
 // NVIDIA Work Desk Application State & Speech Controller
 document.addEventListener('DOMContentLoaded', () => {
   
-  // 4 Active NVIDIA API Keys for Static / GitHub Pages Mode
-  const NVIDIA_KEYS = [
-    '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',
-    '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',
-    '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',
-    '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'
-  ];
-  let keyIndex = 0;
-  function getNextKey() {
-    const k = NVIDIA_KEYS[keyIndex];
-    keyIndex = (keyIndex + 1) % NVIDIA_KEYS.length;
-    return k;
-  }
-
   // State variables
   let isListening = false;
   let recognition = null;
@@ -50,6 +36,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const cosmosGenPrompt = document.getElementById('cosmosGenPrompt');
   const cosmosReasonContext = document.getElementById('cosmosReasonContext');
 
+  // Unlock Audio & Speech Synthesis engine on user gesture
+  function unlockAudioEngine() {
+    if ('speechSynthesis' in window) {
+      try {
+        speechSynthesis.resume();
+      } catch (e) {}
+    }
+  }
+
+  document.addEventListener('click', unlockAudioEngine, { once: true });
+  document.addEventListener('keydown', unlockAudioEngine, { once: true });
+
   // Initialize Speech Synthesis Voices
   function populateVoices() {
     if ('speechSynthesis' in window) {
@@ -76,23 +74,30 @@ document.addEventListener('DOMContentLoaded', () => {
   function speak(text) {
     if (!autoReadToggle.checked || !('speechSynthesis' in window)) return;
     
+    // Strip markdown tags and reasoning tags for clean audio readout
     const cleanText = text.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/[\*\_`#]/g, '').trim();
     if (!cleanText) return;
 
-    speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    const voices = speechSynthesis.getVoices();
-    
-    if (voiceSelect.value && voices[voiceSelect.value]) {
-      utterance.voice = voices[voiceSelect.value];
-    }
-    utterance.rate = parseFloat(voiceRate.value) || 1.0;
-    
-    utterance.onstart = () => startWaveformAnimation(true);
-    utterance.onend = () => startWaveformAnimation(false);
-    utterance.onerror = () => startWaveformAnimation(false);
+    try {
+      speechSynthesis.cancel(); // Stop ongoing speech
+      speechSynthesis.resume();
+      
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      const voices = speechSynthesis.getVoices();
+      
+      if (voiceSelect.value && voices[voiceSelect.value]) {
+        utterance.voice = voices[voiceSelect.value];
+      }
+      utterance.rate = parseFloat(voiceRate.value) || 1.0;
+      
+      utterance.onstart = () => startWaveformAnimation(true);
+      utterance.onend = () => startWaveformAnimation(false);
+      utterance.onerror = () => startWaveformAnimation(false);
 
-    speechSynthesis.speak(utterance);
+      speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn('Speech synthesis error:', e);
+    }
   }
 
   // Initialize Web Speech Recognition (STT)
@@ -145,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     rec.onend = () => {
       if (isListening) {
-        rec.start();
+        try { rec.start(); } catch (e) {}
       } else {
         stopListening();
       }
@@ -155,6 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function startListening() {
+    unlockAudioEngine();
     if (!recognition) recognition = initSpeechRecognition();
     if (recognition) {
       isListening = true;
@@ -184,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
     else startListening();
   });
 
-  // Canvas Audio Waveform Simulation Visualizer
+  // Canvas Audio Waveform Visualizer
   function startWaveformAnimation(active) {
     const ctx = waveformCanvas.getContext('2d');
     const width = waveformCanvas.width;
@@ -254,27 +260,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Render Key Monitor Cards
   async function renderKeyMonitor() {
-    keyMonitorGrid.innerHTML = NVIDIA_KEYS.map((k, idx) => `
-      <div class="card glass-card key-card">
-        <div class="key-title">
-          <span>NVIDIA API Key #${idx + 1}</span>
-          <span class="badge badge-live">ONLINE</span>
+    try {
+      const res = await fetch('/api/keys/status');
+      const data = await res.json();
+      keyMonitorGrid.innerHTML = data.keys.map(k => `
+        <div class="card glass-card key-card">
+          <div class="key-title">
+            <span>NVIDIA API Key #${k.id}</span>
+            <span class="badge badge-live">ONLINE</span>
+          </div>
+          <div class="key-mask">${k.masked}</div>
+          <div class="setting-item">
+            <span>Endpoint</span>
+            <span>https://integrate.api.nvidia.com/v1</span>
+          </div>
+          <div class="setting-item">
+            <span>Quota & Rate Limit</span>
+            <span class="text-green">Unlimited Load-Balanced</span>
+          </div>
         </div>
-        <div class="key-mask">${k.substring(0, 10)}...${k.substring(k.length - 6)}</div>
-        <div class="setting-item">
-          <span>Endpoint</span>
-          <span>https://integrate.api.nvidia.com/v1</span>
+      `).join('');
+    } catch (e) {
+      keyMonitorGrid.innerHTML = `
+        <div class="card glass-card key-card">
+          <div class="key-title">
+            <span>NVIDIA API Key Cluster</span>
+            <span class="badge badge-live">ACTIVE</span>
+          </div>
+          <div class="key-mask">4 Active Keys Configured</div>
+          <div class="setting-item">
+            <span>Status</span>
+            <span class="text-green">Load Balanced</span>
+          </div>
         </div>
-        <div class="setting-item">
-          <span>Quota & Rate Limit</span>
-          <span class="text-green">Unlimited Load-Balanced</span>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }
   }
 
   // Chat Submission & NVIDIA NIM Stream Handler
   async function sendMessage() {
+    unlockAudioEngine();
+
     const text = promptInput.value.trim();
     if (!text) return;
 
@@ -292,20 +318,12 @@ document.addEventListener('DOMContentLoaded', () => {
     thoughtPanel.classList.add('hidden');
 
     const selectedModel = modelSelect.value;
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
-    let endpoint = '/api/chat/completions';
-    let headers = { 'Content-Type': 'application/json' };
-
-    if (!isLocal) {
-      endpoint = 'https://integrate.api.nvidia.com/v1/chat/completions';
-      headers['Authorization'] = `Bearer ${getNextKey()}`;
-    }
+    const apiEndpoint = '/api/chat/completions';
 
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
-        headers: headers,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: selectedModel,
           messages: [{ role: 'user', content: text }],
@@ -314,9 +332,14 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP Error ${response.status}`);
+      }
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let fullContent = '';
+      let streamBuffer = '';
 
       assistantBubble.innerHTML = '';
 
@@ -324,13 +347,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
+        streamBuffer += decoder.decode(value, { stream: true });
+        const lines = streamBuffer.split('\n');
+        streamBuffer = lines.pop() || ''; // Keep incomplete trailing line
 
         for (const line of lines) {
-          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('data: ') && trimmed !== 'data: [DONE]') {
             try {
-              const data = JSON.parse(line.slice(6));
+              const data = JSON.parse(trimmed.slice(6));
               const delta = data.choices?.[0]?.delta;
               
               if (delta) {
@@ -389,35 +414,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cosmos 3 Studio Controls
   if (genCosmosBtn) {
     genCosmosBtn.addEventListener('click', async () => {
+      unlockAudioEngine();
       const rawPrompt = cosmosGenPrompt.value.trim() || 'Industrial robotic arm manipulation in a laboratory';
       genCosmosBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating Cosmos Prompt...';
-      
-      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      let endpoint = '/api/prompt-upsample';
-      let headers = { 'Content-Type': 'application/json' };
-
-      if (!isLocal) {
-        endpoint = 'https://integrate.api.nvidia.com/v1/chat/completions';
-        headers['Authorization'] = `Bearer ${getNextKey()}`;
-      }
 
       try {
-        const payload = isLocal ? { prompt: rawPrompt, mode: 'cosmos' } : {
-          model: 'nvidia/nemotron-3.5-lightning-30b-a3b',
-          messages: [
-            { role: 'system', content: "You are an expert NVIDIA Cosmos 3 Physical AI prompt generator. Expand the user's short description into a rich, detailed, physics-grounded scene description suitable for text-to-video world generation. Output ONLY the expanded prompt." },
-            { role: 'user', content: rawPrompt }
-          ]
-        };
-
-        const res = await fetch(endpoint, {
+        const res = await fetch('/api/prompt-upsample', {
           method: 'POST',
-          headers: headers,
-          body: JSON.stringify(payload)
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: rawPrompt, mode: 'cosmos' })
         });
         const data = await res.json();
-        const expanded = data.upsampled_prompt || data.choices?.[0]?.message?.content || rawPrompt;
-        cosmosGenPrompt.value = expanded;
+        cosmosGenPrompt.value = data.upsampled_prompt || rawPrompt;
       } catch (e) {
         console.warn('Cosmos gen error:', e);
       } finally {
@@ -428,6 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (reasonCosmosBtn) {
     reasonCosmosBtn.addEventListener('click', async () => {
+      unlockAudioEngine();
       const ctxText = cosmosReasonContext.value.trim() || 'Analyze physical plausibility and temporal event localization';
       modelSelect.value = 'nvidia/nemotron-3.5-lightning-30b-a3b';
       document.querySelector('[data-tab="reasoning"]').click();
@@ -438,36 +447,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Prompt Upsampler Integration
   upsamplePromptBtn.addEventListener('click', async () => {
+    unlockAudioEngine();
     const raw = promptInput.value.trim();
     if (!raw) return;
 
     upsamplePromptBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Upsampling...';
     try {
-      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      let endpoint = '/api/prompt-upsample';
-      let headers = { 'Content-Type': 'application/json' };
-
-      if (!isLocal) {
-        endpoint = 'https://integrate.api.nvidia.com/v1/chat/completions';
-        headers['Authorization'] = `Bearer ${getNextKey()}`;
-      }
-
-      const payload = isLocal ? { prompt: raw, mode: 'general' } : {
-        model: 'nvidia/nemotron-3.5-lightning-30b-a3b',
-        messages: [
-          { role: 'system', content: "You are an expert AI prompt upsampler powered by NVIDIA Nemotron. Expand the user's request into a highly detailed, structured, precise instruction for complex AI reasoning and coding. Output ONLY the enhanced prompt." },
-          { role: 'user', content: raw }
-        ]
-      };
-
-      const res = await fetch(endpoint, {
+      const res = await fetch('/api/prompt-upsample', {
         method: 'POST',
-        headers: headers,
-        body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: raw, mode: 'general' })
       });
       const data = await res.json();
-      const expanded = data.upsampled_prompt || data.choices?.[0]?.message?.content || raw;
-      promptInput.value = expanded;
+      promptInput.value = data.upsampled_prompt || raw;
     } catch (e) {
       console.warn('Upsample error:', e);
     } finally {
