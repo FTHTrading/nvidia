@@ -65,43 +65,46 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', unlockAudioEngine, { once: true });
 
   // Initialize High-Fidelity Natural Neural Speech Synthesis Voices
+  let availableVoices = [];
   function populateVoices() {
     if ('speechSynthesis' in window) {
-      let voices = speechSynthesis.getVoices();
+      availableVoices = speechSynthesis.getVoices();
       
       // Sort and prioritize Neural, Natural, Google, Apple, Microsoft English Voices
-      voices.sort((a, b) => {
+      availableVoices.sort((a, b) => {
         const nameA = a.name.toLowerCase();
         const nameB = b.name.toLowerCase();
         
-        const scoreA = (nameA.includes('natural') ? 12 : 0) +
-                       (nameA.includes('neural') ? 12 : 0) +
-                       (nameA.includes('google us english') ? 10 : 0) +
-                       (nameA.includes('samantha') ? 8 : 0) +
-                       (nameA.includes('microsoft guy') || nameA.includes('microsoft jenny') ? 8 : 0) +
-                       (a.lang.startsWith('en-US') ? 6 : 0) +
-                       (a.lang.startsWith('en') ? 3 : 0);
+        const scoreA = (nameA.includes('natural') ? 15 : 0) +
+                       (nameA.includes('neural') ? 15 : 0) +
+                       (nameA.includes('google us english') ? 12 : 0) +
+                       (nameA.includes('samantha') ? 10 : 0) +
+                       (nameA.includes('microsoft guy') || nameA.includes('microsoft jenny') ? 10 : 0) +
+                       (a.lang.startsWith('en-US') ? 8 : 0) +
+                       (a.lang.startsWith('en') ? 4 : 0);
 
-        const scoreB = (nameB.includes('natural') ? 12 : 0) +
-                       (nameB.includes('neural') ? 12 : 0) +
-                       (nameB.includes('google us english') ? 10 : 0) +
-                       (nameB.includes('samantha') ? 8 : 0) +
-                       (nameB.includes('microsoft guy') || nameB.includes('microsoft jenny') ? 8 : 0) +
-                       (b.lang.startsWith('en-US') ? 6 : 0) +
-                       (b.lang.startsWith('en') ? 3 : 0);
+        const scoreB = (nameB.includes('natural') ? 15 : 0) +
+                       (nameB.includes('neural') ? 15 : 0) +
+                       (nameB.includes('google us english') ? 12 : 0) +
+                       (nameB.includes('samantha') ? 10 : 0) +
+                       (nameB.includes('microsoft guy') || nameB.includes('microsoft jenny') ? 10 : 0) +
+                       (b.lang.startsWith('en-US') ? 8 : 0) +
+                       (b.lang.startsWith('en') ? 4 : 0);
 
         return scoreB - scoreA;
       });
 
-      voiceSelect.innerHTML = '';
-      voices.forEach((v, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        const isNeural = v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('neural') || v.name.toLowerCase().includes('google');
-        option.textContent = `${v.name} ${isNeural ? '✨ [Natural Neural]' : ''}`;
-        if (index === 0) option.selected = true;
-        voiceSelect.appendChild(option);
-      });
+      if (voiceSelect) {
+        voiceSelect.innerHTML = '';
+        availableVoices.forEach((v, index) => {
+          const option = document.createElement('option');
+          option.value = v.name;
+          const isNeural = v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('neural') || v.name.toLowerCase().includes('google');
+          option.textContent = `${v.name} ${isNeural ? '✨ [Natural Neural]' : ''}`;
+          if (index === 0) option.selected = true;
+          voiceSelect.appendChild(option);
+        });
+      }
     }
   }
 
@@ -123,27 +126,56 @@ document.addEventListener('DOMContentLoaded', () => {
       speechSynthesis.resume();
       
       const utterance = new SpeechSynthesisUtterance(cleanText);
-      const voices = speechSynthesis.getVoices();
+      const voices = availableVoices.length > 0 ? availableVoices : speechSynthesis.getVoices();
       
-      if (voiceSelect.value && voices[voiceSelect.value]) {
-        utterance.voice = voices[voiceSelect.value];
+      let selectedVoice = null;
+      if (voiceSelect && voiceSelect.value) {
+        selectedVoice = voices.find(v => v.name === voiceSelect.value);
       }
+      
+      if (!selectedVoice && voices.length > 0) {
+        selectedVoice = voices.find(v => 
+          v.name.toLowerCase().includes('google') || 
+          v.name.toLowerCase().includes('natural') || 
+          v.name.toLowerCase().includes('neural') ||
+          v.lang.startsWith('en-US')
+        ) || voices[0];
+      }
+      
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+
       utterance.rate = parseFloat(voiceRate.value) || 1.0;
       utterance.pitch = 1.0; // Human natural conversational pitch
       
-      utterance.onstart = () => startWaveformAnimation(true);
+      utterance.onstart = () => {
+        if (voiceStatusLabel) voiceStatusLabel.textContent = 'AI Speaking...';
+        if (voiceSubLabel) voiceSubLabel.textContent = selectedVoice ? selectedVoice.name : 'Natural Neural Voice';
+        startWaveformAnimation(true);
+      };
+      
       utterance.onend = () => {
+        if (voiceStatusLabel) voiceStatusLabel.textContent = 'Voice Ready';
+        if (voiceSubLabel) voiceSubLabel.textContent = 'Click mic or speak to continue';
         startWaveformAnimation(false);
+
         // Automatic Conversational Voice Loop: re-activate microphone after speaking
-        if (isListening) {
-          setTimeout(() => { try { startListening(); } catch(e){} }, 500);
+        const contToggle = document.getElementById('continuousVoiceToggle');
+        if (contToggle && contToggle.checked) {
+          setTimeout(() => { try { startListening(); } catch(e){} }, 600);
         }
       };
-      utterance.onerror = () => startWaveformAnimation(false);
+
+      utterance.onerror = (err) => {
+        console.warn('Speech synthesis utterance error:', err);
+        if (voiceStatusLabel) voiceStatusLabel.textContent = 'Voice Idle';
+        startWaveformAnimation(false);
+      };
 
       speechSynthesis.speak(utterance);
     } catch (e) {
-      console.warn('Speech synthesis error:', e);
+      console.warn('Speech synthesis exception:', e);
     }
   }
 
