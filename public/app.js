@@ -213,57 +213,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const rec = new SpeechRecognition();
-    rec.continuous = true;
+    rec.continuous = false;
     rec.interimResults = true;
     rec.lang = 'en-US';
 
+    let capturedTranscript = '';
+
     rec.onstart = () => {
       isListening = true;
+      capturedTranscript = '';
       micBtn.classList.add('listening');
       inputMicBtn.classList.add('text-green');
       voiceStatusLabel.textContent = 'Listening...';
-      voiceSubLabel.textContent = 'Speak clearly into your microphone';
+      voiceSubLabel.textContent = 'Speak now into your microphone';
       startWaveformAnimation(true);
     };
 
     rec.onresult = (event) => {
-      let interimTranscript = '';
-      let finalTranscript = '';
-
+      let current = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-        } else {
-          interimTranscript += transcript;
-        }
+        current += event.results[i][0].transcript;
       }
-
-      if (finalTranscript) {
-        promptInput.value = finalTranscript.trim();
-        stopListening();
-        sendMessage();
-      } else if (interimTranscript) {
-        promptInput.placeholder = interimTranscript;
+      if (current) {
+        capturedTranscript = current;
+        promptInput.value = current;
       }
     };
 
     rec.onerror = (event) => {
       console.warn('Speech recognition error:', event.error);
-      if (event.error === 'no-speech') {
-        if (isListening) {
-          setTimeout(() => { try { rec.start(); } catch (e) {} }, 300);
-        }
-      } else {
-        stopListening();
-      }
+      stopListening();
     };
 
     rec.onend = () => {
-      if (isListening) {
-        try { rec.start(); } catch (e) {}
-      } else {
-        stopListening();
+      stopListening();
+      if (capturedTranscript && capturedTranscript.trim().length > 0) {
+        promptInput.value = capturedTranscript.trim();
+        capturedTranscript = '';
+        sendMessage();
       }
     };
 
