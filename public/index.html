@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NVIDIA Work Desk | Omnimodal Physical AI & Voice Control Suite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Background Animated Mesh Grid -->
+  <div class="bg-grid"></div>
+  <div class="glow-orb orb-1"></div>
+  <div class="glow-orb orb-2"></div>
+
+  <!-- Header Navigation -->
+  <header class="navbar">
+    <div class="nav-brand">
+      <div class="nvidia-logo-icon">
+        <i class="fa-solid fa-microchip"></i>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">NVIDIA <span class="highlight">WORK DESK</span></span>
+        <span class="brand-sub">Omnimodal Physical AI & Voice Suite</span>
+      </div>
+    </div>
+
+    <!-- Active Model Selector -->
+    <div class="model-select-wrapper">
+      <i class="fa-solid fa-brain select-icon"></i>
+      <select id="modelSelect" class="model-dropdown">
+        <option value="nvidia/nemotron-3.5-lightning-30b-a3b" selected>nvidia/nemotron-3.5-lightning-30b-a3b (Fast Reasoning)</option>
+        <option value="nvidia/llama-3.3-nemotron-super-49b-v1">nvidia/llama-3.3-nemotron-super-49b-v1 (Nemotron Super)</option>
+        <option value="meta/llama-3.3-70b-instruct">meta/llama-3.3-70b-instruct (Llama 3.3 70B)</option>
+        <option value="google/gemma-3-12b-it">google/gemma-3-12b-it (Gemma 3 12B)</option>
+        <option value="mistralai/mistral-large-2-instruct">mistralai/mistral-large-2-instruct (Mistral Large 2)</option>
+        <option value="deepseek-ai/deepseek-v4-flash-0731">deepseek-ai/deepseek-v4-flash-0731 (DeepSeek V4 Flash)</option>
+      </select>
+    </div>
+
+    <div class="nav-actions">
+      <!-- Key Rotator Badge -->
+      <div class="key-status-badge" id="keyBadge" title="NVIDIA API Key Load Balancer Status">
+        <span class="pulse-dot"></span>
+        <span id="keyStatusText">4/4 Keys Active</span>
+      </div>
+
+      <!-- Open WebUI Quick Switch -->
+      <button class="btn-secondary" id="toggleWebUiBtn" title="Switch between NVIDIA Work Desk and Open WebUI">
+        <i class="fa-solid fa-layer-group"></i>
+        <span>Open WebUI</span>
+      </button>
+
+      <!-- Refresh Models -->
+      <button class="btn-icon" id="refreshModelsBtn" title="Fetch Latest NIM Models">
+        <i class="fa-solid fa-rotate"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Application Container -->
+  <main class="main-container">
+
+    <!-- Left Control Panel & Sidebar -->
+    <aside class="sidebar">
+
+      <!-- Voice Command Studio Card -->
+      <div class="card glass-card voice-card">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-microphone-lines highlight"></i> Voice Control Studio</h3>
+          <span class="badge badge-live">RIVA READY</span>
+        </div>
+
+        <div class="voice-controls">
+          <!-- Main Mic Button -->
+          <button id="micBtn" class="mic-button" title="Click to Start Voice Input">
+            <i class="fa-solid fa-microphone"></i>
+          </button>
+
+          <div class="voice-status">
+            <span id="voiceStatusLabel" class="voice-label">Voice Off</span>
+            <span id="voiceSubLabel" class="voice-sub">Click mic or hold spacebar</span>
+          </div>
+        </div>
+
+        <!-- Audio Waveform Visualizer Canvas -->
+        <div class="waveform-container">
+          <canvas id="waveformCanvas" width="280" height="40"></canvas>
+        </div>
+
+        <!-- Voice Settings Accordion -->
+        <div class="voice-settings">
+          <div class="setting-item">
+            <label for="autoReadToggle"><i class="fa-solid fa-volume-high"></i> Auto Read Responses</label>
+            <input type="checkbox" id="autoReadToggle" checked>
+          </div>
+
+          <div class="setting-item">
+            <label for="voiceRate"><i class="fa-solid fa-gauge-high"></i> Speech Rate</label>
+            <input type="range" id="voiceRate" min="0.5" max="2" value="1" step="0.1">
+          </div>
+
+          <div class="setting-item">
+            <label for="voiceSelect"><i class="fa-solid fa-user-gear"></i> TTS Voice</label>
+            <select id="voiceSelect" class="small-dropdown"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Studio Mode Selector -->
+      <div class="card glass-card nav-menu">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-cubes highlight"></i> NVIDIA Work Desks</h3>
+        </div>
+
+        <button class="menu-item active" data-tab="reasoning">
+          <i class="fa-solid fa-brain"></i>
+          <span>Nemotron Reasoning Desk</span>
+        </button>
+
+        <button class="menu-item" data-tab="cosmos">
+          <i class="fa-solid fa-vr-cardboard"></i>
+          <span>Physical AI & Cosmos 3</span>
+        </button>
+
+        <button class="menu-item" data-tab="keys">
+          <i class="fa-solid fa-key"></i>
+          <span>API Key Load Balancer</span>
+        </button>
+      </div>
+
+      <!-- Key Rotator Details -->
+      <div class="card glass-card info-card">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-bolt highlight"></i> NIM API Engine</h3>
+        </div>
+        <ul class="info-list">
+          <li><i class="fa-solid fa-check text-green"></i> 102 Foundation Models</li>
+          <li><i class="fa-solid fa-check text-green"></i> 4x Key Rotator Active</li>
+          <li><i class="fa-solid fa-check text-green"></i> OpenAI Compatible API</li>
+          <li><i class="fa-solid fa-check text-green"></i> Voice STT / TTS Enabled</li>
+        </ul>
+      </div>
+
+    </aside>
+
+    <!-- Content Work Desk Workspace -->
+    <section class="workspace">
+
+      <!-- View Tab 1: Nemotron Reasoning & Omnimodal Desk -->
+      <div class="tab-view active" id="tab-reasoning">
+        <div class="workspace-header">
+          <div class="view-title">
+            <h2>NVIDIA Nemotron 3.5 Lightning Studio</h2>
+            <p>Real-time omnimodal reasoning with live voice stream and thinking visualizer</p>
+          </div>
+          <div class="view-actions">
+            <button id="clearChatBtn" class="btn-outline"><i class="fa-solid fa-trash-can"></i> Clear Desk</button>
+            <button id="upsamplePromptBtn" class="btn-outline highlight-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> Upsample Prompt</button>
+          </div>
+        </div>
+
+        <!-- Chat Stream & Thought Window -->
+        <div class="chat-container glass-card" id="chatContainer">
+          <div class="welcome-banner">
+            <div class="welcome-icon"><i class="fa-solid fa-bolt"></i></div>
+            <h3>Welcome to NVIDIA Work Desk</h3>
+            <p>Powered by NVIDIA NIM API & Nemotron 3.5. Activate voice by clicking the microphone or typing below.</p>
+            <div class="prompt-chips">
+              <button class="chip" onclick="usePreset('Write a high-performance Python CUDA kernel for matrix multiplication')">⚡ CUDA Matrix Kernel</button>
+              <button class="chip" onclick="usePreset('Explain the Mixture-of-Transformers architecture in Cosmos 3')">🌌 Cosmos 3 Architecture</button>
+              <button class="chip" onclick="usePreset('Design a real-time robotic policy for autonomous manipulation')">🤖 Robotic Policy Plan</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reasoning Stream Panel (Collapsible Thought Process) -->
+        <div class="thought-panel glass-card hidden" id="thoughtPanel">
+          <div class="thought-header">
+            <span><i class="fa-solid fa-microchip highlight"></i> Nemotron Reasoning Chain (&lt;think&gt;)</span>
+            <button id="closeThoughtBtn" class="btn-icon-small"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <pre id="thoughtContent" class="thought-text"></pre>
+        </div>
+
+        <!-- Prompt Input Dock -->
+        <div class="input-dock glass-card">
+          <div class="input-wrapper">
+            <textarea id="promptInput" placeholder="Speak or type your prompt for NVIDIA Nemotron..." rows="2"></textarea>
+            <div class="dock-controls">
+              <button id="inputMicBtn" class="btn-icon dock-mic-btn" title="Voice Input">
+                <i class="fa-solid fa-microphone"></i>
+              </button>
+              <button id="sendBtn" class="btn-primary" title="Send Message">
+                <span>Send</span>
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View Tab 2: Physical AI & Cosmos 3 Studio -->
+      <div class="tab-view" id="tab-cosmos">
+        <div class="workspace-header">
+          <div class="view-title">
+            <h2>NVIDIA Cosmos 3 Physical AI Studio</h2>
+            <p>World Generation, Grounding, Inverse Dynamics & Physical Simulation Controls</p>
+          </div>
+        </div>
+
+        <div class="cosmos-grid">
+          <div class="card glass-card">
+            <h3><i class="fa-solid fa-globe highlight"></i> World Generation (Generator Mode)</h3>
+            <p>Generate physics-grounded scene predictions from text or images.</p>
+            
+            <div class="form-group">
+              <label>Scene Description Prompt</label>
+              <textarea id="cosmosGenPrompt" rows="3" placeholder="A robotic arm assembling a circuit board in an industrial laboratory..."></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Resolution Tier</label>
+                <select id="cosmosRes">
+                  <option value="720p">720p (1280x720)</option>
+                  <option value="480p" selected>480p (832x480)</option>
+                  <option value="256p">256p (320x192)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>FPS</label>
+                <select id="cosmosFps">
+                  <option value="24" selected>24 FPS</option>
+                  <option value="30">30 FPS</option>
+                  <option value="16">16 FPS</option>
+                </select>
+              </div>
+            </div>
+
+            <button id="genCosmosBtn" class="btn-primary full-width">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Generate World Scene Prompt
+            </button>
+          </div>
+
+          <div class="card glass-card">
+            <h3><i class="fa-solid fa-eye highlight"></i> World Reasoning & Grounding (Reasoner Mode)</h3>
+            <p>Temporal event localization, 2D bounding boxes, and action trajectory prediction.</p>
+            
+            <div class="form-group">
+              <label>Reasoning Workflow</label>
+              <select id="cosmosWorkflow">
+                <option value="caption">Video & Image Detailed Captioning</option>
+                <option value="grounding">2D Grounding & Bounding Box Localization</option>
+                <option value="embodied">Embodied Agent Action Forecasting</option>
+                <option value="physical">Physical Plausibility Analysis</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Reasoning Context</label>
+              <textarea id="cosmosReasonContext" rows="3" placeholder="Analyze the spatial grounding and causal outcomes of this scene..."></textarea>
+            </div>
+
+            <button id="reasonCosmosBtn" class="btn-secondary full-width">
+              <i class="fa-solid fa-brain"></i> Execute Cosmos Reasoner
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- View Tab 3: API Key Load Balancer & Telemetry -->
+      <div class="tab-view" id="tab-keys">
+        <div class="workspace-header">
+          <div class="view-title">
+            <h2>NVIDIA API Key Load Balancer & Health Monitor</h2>
+            <p>Live status of all 4 active NVIDIA API keys from nvidiaapi.env</p>
+          </div>
+        </div>
+
+        <div class="key-monitor-grid" id="keyMonitorGrid">
+          <!-- Dynamically filled by app.js -->
+        </div>
+      </div>
+
+      <!-- Open WebUI Embedded Frame View -->
+      <div class="webui-frame-container hidden" id="webuiFrameContainer">
+        <iframe id="webuiIframe" src="http://localhost:8080/" frameborder="0"></iframe>
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
