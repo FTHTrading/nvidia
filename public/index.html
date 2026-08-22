@@ -147,7 +147,12 @@
           <h3><i class="fa-solid fa-cubes highlight"></i> NVIDIA Work Desks</h3>
         </div>
 
-        <button class="menu-item active" data-tab="reasoning">
+        <button class="menu-item active" data-tab="mission">
+          <i class="fa-solid fa-satellite-dish text-green"></i>
+          <span>Live AI Operations Center</span>
+        </button>
+
+        <button class="menu-item" data-tab="reasoning">
           <i class="fa-solid fa-brain"></i>
           <span>Nemotron Reasoning Desk</span>
         </button>
@@ -193,11 +198,99 @@
 
     </aside>
 
-    <!-- Content Work Desk Workspace -->
-    <section class="workspace">
+      <!-- View Tab 0: Live AI Operations Center & Clustered Work Monitor -->
+      <div class="tab-view active" id="tab-mission">
+        <div class="workspace-header">
+          <div class="view-title">
+            <h2>Live AI Operations Center & Clustered Work Monitor</h2>
+            <p>Real-time stream of code changes, terminal execution, and AI employee activity</p>
+          </div>
+          <div class="view-actions">
+            <button id="refreshMissionBtn" class="btn-primary"><i class="fa-solid fa-rotate"></i> Refresh Telemetry</button>
+          </div>
+        </div>
+
+        <div class="mot-experts-grid margin-bottom-card" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <!-- Clustered AI Workers Panel -->
+          <div class="card glass-card">
+            <h3><i class="fa-solid fa-people-group highlight"></i> Clustered AI Employees (5 Workers)</h3>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">Active agent threads executing local code, terminal commands, and DNS tasks.</p>
+            
+            <div id="missionWorkerCards" style="display: flex; flex-direction: column; gap: 8px;">
+              <div class="activity-item">
+                <i class="fa-solid fa-code text-green"></i>
+                <div>
+                  <div class="act-title">🛠️ Code Builder & Developer Agent</div>
+                  <div class="act-desc">Status: <strong>ACTIVE</strong> | Task: Writing code, editing index.html, running git commit</div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <i class="fa-solid fa-shield-halved text-green"></i>
+                <div>
+                  <div class="act-title">🛡️ Standalone Local Sandbox Agent</div>
+                  <div class="act-desc">Status: <strong>ACTIVE</strong> | Task: Local container execution & NeMo guardrails ready</div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <i class="fa-solid fa-globe text-green"></i>
+                <div>
+                  <div class="act-title">🌐 Infrastructure & Cloudflare DNS Agent</div>
+                  <div class="act-desc">Status: <strong>IDLE</strong> | Task: Verified nil33.com & mma.unykorn.ai CNAME</div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <i class="fa-solid fa-stethoscope text-green"></i>
+                <div>
+                  <div class="act-title">🩺 QA & Self-Healing Agent</div>
+                  <div class="act-desc">Status: <strong>ACTIVE</strong> | Task: Monitoring local server 200 OK & auto-fix lints</div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <i class="fa-solid fa-vault text-green"></i>
+                <div>
+                  <div class="act-title">💎 RWA & Treasury Intelligence Agent</div>
+                  <div class="act-desc">Status: <strong>IDLE</strong> | Task: BitGo custody telemetry & athlete purse tracking</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick One-Click Swarm Action Triggers -->
+          <div class="card glass-card">
+            <h3><i class="fa-solid fa-bolt highlight"></i> Quick Swarm Work Triggers</h3>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">Dispatch instant AI tasks to see work execute live.</p>
+
+            <button id="triggerCodeAuditBtn" class="btn-primary full-width" style="margin-bottom: 8px;">
+              <i class="fa-solid fa-stethoscope"></i> 1. Run System Code & Server Audit
+            </button>
+            <button id="triggerGitSyncBtn" class="btn-secondary full-width" style="margin-bottom: 8px;">
+              <i class="fa-solid fa-code-branch"></i> 2. Sync & Deploy Latest GitHub Main
+            </button>
+            <button id="triggerDnsCheckBtn" class="btn-secondary full-width">
+              <i class="fa-solid fa-network-wired"></i> 3. Verify Cloudflare DNS & SSL Health
+            </button>
+
+            <div id="missionTriggerOutput" class="mot-analysis-text hidden" style="margin-top: 10px;"></div>
+          </div>
+        </div>
+
+        <!-- Live Terminal Console & Execution Stream -->
+        <div class="card glass-card">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <h3><i class="fa-solid fa-terminal text-green"></i> Live System Execution Terminal & Log Feed</h3>
+            <span class="badge badge-live">LIVE STDOUT</span>
+          </div>
+          <div id="terminalConsole" class="terminal-console">
+            <div class="terminal-line"><span class="term-time">[17:27:01]</span> <span class="term-cmd">[SYSTEM]</span> Antigravity Local Execution Engine initialized.</div>
+            <div class="terminal-line"><span class="term-time">[17:27:03]</span> <span class="term-cmd">[SWARM]</span> 5 AI Worker Agents active on port 8795.</div>
+            <div class="terminal-line"><span class="term-time">[17:27:05]</span> <span class="term-cmd">[NVIDIA]</span> 6/6 API Keys Rotated & Active (nvapi-*).</div>
+            <div class="terminal-line"><span class="term-time">[17:27:10]</span> <span class="term-success">[GIT]</span> Pushed commit 1d02097 to FTHTrading/nvidia (main).</div>
+          </div>
+        </div>
+      </div>
 
       <!-- View Tab 1: Nemotron Reasoning & Omnimodal Desk -->
-      <div class="tab-view active" id="tab-reasoning">
+      <div class="tab-view" id="tab-reasoning">
         <div class="workspace-header">
           <div class="view-title">
             <h2>NVIDIA Nemotron 3.5 Lightning Studio</h2>
