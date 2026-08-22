@@ -33,8 +33,9 @@
     <div class="model-select-wrapper">
       <i class="fa-solid fa-brain select-icon"></i>
       <select id="modelSelect" class="model-dropdown">
-        <option value="nvidia/nemotron-3.5-lightning-30b-a3b" selected>nvidia/nemotron-3.5-lightning-30b-a3b (Fast Reasoning)</option>
-        <option value="nvidia/llama-3.3-nemotron-super-49b-v1">nvidia/llama-3.3-nemotron-super-49b-v1 (Nemotron Super)</option>
+        <option value="nvidia/nemotron-voicechat" selected>nvidia/nemotron-voicechat (Nemotron 3 VoiceChat Full-Duplex)</option>
+        <option value="nvidia/nemotron-3.5-lightning-30b-a3b">nvidia/nemotron-3.5-lightning-30b-a3b (Fast Reasoning)</option>
+        <option value="nvidia/llama-3.3-nemotron-super-49b-v1">nvidia/llama-3.3-nemotron-super-49b-v1 (Nemotron Super 49B)</option>
         <option value="meta/llama-3.3-70b-instruct">meta/llama-3.3-70b-instruct (Llama 3.3 70B)</option>
         <option value="google/gemma-3-12b-it">google/gemma-3-12b-it (Gemma 3 12B)</option>
         <option value="mistralai/mistral-large-2-instruct">mistralai/mistral-large-2-instruct (Mistral Large 2)</option>
@@ -94,6 +95,15 @@
 
         <!-- Voice Settings Accordion -->
         <div class="voice-settings">
+          <div class="setting-item column-setting">
+            <label for="voiceEngineSelect"><i class="fa-solid fa-wave-square text-green"></i> Voice Model Engine</label>
+            <select id="voiceEngineSelect" class="select-full" style="margin-bottom: 6px;">
+              <option value="nemotron-voicechat" selected>🎙️ Nemotron 3 VoiceChat (Full-Duplex)</option>
+              <option value="chatterbox">💬 Chatterbox Neural Voice Synthesizer</option>
+              <option value="riva">⚡ NVIDIA Riva High-Fidelity TTS</option>
+            </select>
+          </div>
+
           <div class="setting-item">
             <label for="autoReadToggle"><i class="fa-solid fa-volume-high"></i> Auto Read Responses</label>
             <input type="checkbox" id="autoReadToggle" checked>

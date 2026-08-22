@@ -468,9 +468,20 @@ document.addEventListener('DOMContentLoaded', () => {
     thoughtPanel.classList.add('hidden');
 
     const selectedModel = modelSelect.value;
+    const voiceEngine = document.getElementById('voiceEngineSelect')?.value || 'nemotron-voicechat';
+
+    // Construct payload with VoiceChat system prompt if Nemotron VoiceChat is selected
+    let systemMsg = "You are an expert NVIDIA AI assistant.";
+    if (selectedModel === 'nvidia/nemotron-voicechat' || voiceEngine === 'nemotron-voicechat') {
+      systemMsg = "You are NVIDIA Nemotron 3 VoiceChat, a full-duplex conversational voice model. Speak directly to the user in a natural, fluid, human-like voice tone.";
+    }
+
     const payload = {
-      model: selectedModel,
-      messages: [{ role: 'user', content: text }],
+      model: selectedModel === 'nvidia/nemotron-voicechat' ? 'nvidia/nemotron-3.5-lightning-30b-a3b' : selectedModel,
+      messages: [
+        { role: 'system', content: systemMsg },
+        { role: 'user', content: text }
+      ],
       temperature: 0.7,
       stream: true
     };
