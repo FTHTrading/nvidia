@@ -93,6 +93,18 @@
           <canvas id="waveformCanvas" width="280" height="40"></canvas>
         </div>
 
+        <!-- Audio & Mic Diagnostic Indicator -->
+        <div id="audioDiagCard" style="margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); border-radius: 6px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 600;">
+            <span><i class="fa-solid fa-shield-halved text-green"></i> Audio Engine</span>
+            <span id="audioPermStatus" style="color: var(--nvidia-green-light);">Click to Unlock</span>
+          </div>
+          <button id="runAudioDiagBtn" class="btn-primary full-width" style="margin-top: 6px; padding: 6px; font-size: 11px;">
+            <i class="fa-solid fa-volume-high"></i> Unlock Audio & Run Diagnostic
+          </button>
+          <div id="audioDiagLog" style="font-size: 10px; color: var(--text-muted); margin-top: 4px;"></div>
+        </div>
+
         <!-- Voice Settings Accordion -->
         <div class="voice-settings">
           <div class="setting-item column-setting">
