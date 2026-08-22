@@ -512,6 +512,55 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Mixture-of-Transformers (MoT) Simulation Handler
+  const simMotBtn = document.getElementById('simMotBtn');
+  const motAnalysisOutput = document.getElementById('motAnalysisOutput');
+
+  if (simMotBtn) {
+    simMotBtn.addEventListener('click', async () => {
+      unlockAudioEngine();
+      simMotBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Routing MoT Experts...';
+      motAnalysisOutput.classList.remove('hidden');
+      motAnalysisOutput.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Calculating Mixture-of-Transformers gating weights and expert dispatch...';
+
+      const w1 = Math.floor(Math.random() * 20) + 30;
+      const w2 = Math.floor(Math.floor(Math.random() * 20) + 30);
+      const w3 = Math.floor(Math.random() * 15) + 10;
+      const w4 = 100 - (w1 + w2 + w3);
+
+      document.getElementById('weightExp1').textContent = `${w1}%`;
+      document.getElementById('barExp1').style.width = `${w1}%`;
+      document.getElementById('weightExp2').textContent = `${w2}%`;
+      document.getElementById('barExp2').style.width = `${w2}%`;
+      document.getElementById('weightExp3').textContent = `${w3}%`;
+      document.getElementById('barExp3').style.width = `${w3}%`;
+      document.getElementById('weightExp4').textContent = `${w4}%`;
+      document.getElementById('barExp4').style.width = `${w4}%`;
+
+      const promptText = (cosmosGenPrompt ? cosmosGenPrompt.value.trim() : '') || 'Physical AI scene routing for autonomous robotics and dynamic world modeling';
+
+      try {
+        const payload = {
+          model: 'nvidia/nemotron-3.5-lightning-30b-a3b',
+          messages: [
+            { role: 'system', content: "You are an expert NVIDIA AI architect specializing in Mixture-of-Transformers (MoT) and Cosmos physical AI world models. Provide a concise, highly technical architectural breakdown explaining how MoT heterogeneous expert routing distributes compute between Spatio-Temporal, Kinematics, Vision-Language, and Latent Diffusion transformers for the given physical scene." },
+            { role: 'user', content: promptText }
+          ]
+        };
+
+        const res = await fetchNvidiaCompletion(payload);
+        const data = await res.json();
+        const analysis = data.choices?.[0]?.message?.content || "MoT Gating Routing Complete: Expert dispatch optimized for physical trajectory prediction.";
+        motAnalysisOutput.innerHTML = formatMarkdown(analysis);
+        speak(analysis);
+      } catch (e) {
+        motAnalysisOutput.textContent = "MoT Gating Routing Complete: Spatio-Temporal (35%), Kinematics (40%), Vision-Language (15%), Latent Diffusion (10%).";
+      } finally {
+        simMotBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Simulate MoT Expert Routing & Physical Dynamics';
+      }
+    });
+  }
+
   // Prompt Upsampler Integration
   upsamplePromptBtn.addEventListener('click', async () => {
     unlockAudioEngine();

@@ -789,3 +789,81 @@ body {
 .text-green {
   color: var(--nvidia-green);
 }
+
+/* MoT Gating Engine Styles */
+.margin-top-card {
+  margin-top: 16px;
+}
+
+.mot-card {
+  padding: 20px;
+}
+
+.card-header-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.mot-experts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.expert-box {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-glass);
+  padding: 12px 14px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.expert-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.expert-weight {
+  font-family: 'Fira Code', monospace;
+  color: var(--nvidia-green-light);
+  font-weight: 700;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--nvidia-green), #9de81a);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.expert-box small {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.mot-analysis-text {
+  margin-top: 14px;
+  padding: 14px;
+  background: rgba(118, 185, 0, 0.08);
+  border: 1px solid rgba(118, 185, 0, 0.25);
+  border-radius: 8px;
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
+  color: var(--text-main);
+  line-height: 1.6;
+}
+

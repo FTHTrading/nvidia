@@ -272,6 +272,62 @@
             </button>
           </div>
         </div>
+
+        <!-- Mixture-of-Transformers (MoT) Interactive Architecture Card -->
+        <div class="card glass-card mot-card margin-top-card">
+          <div class="card-header-flex">
+            <div>
+              <h3><i class="fa-solid fa-diagram-project highlight"></i> Mixture-of-Transformers (MoT) Gating Engine</h3>
+              <p>Heterogeneous transformer expert routing & dynamic capacity scaling for physical AI</p>
+            </div>
+            <span class="badge badge-live">MoT ACTIVE</span>
+          </div>
+
+          <div class="mot-experts-grid">
+            <div class="expert-box">
+              <div class="expert-header">
+                <span><i class="fa-solid fa-film text-green"></i> Spatio-Temporal Expert</span>
+                <span id="weightExp1" class="expert-weight">35%</span>
+              </div>
+              <div class="progress-bar"><div id="barExp1" class="progress-fill" style="width: 35%;"></div></div>
+              <small>Frame dynamics & optical flow</small>
+            </div>
+
+            <div class="expert-box">
+              <div class="expert-header">
+                <span><i class="fa-solid fa-cube text-green"></i> Kinematics & Force Expert</span>
+                <span id="weightExp2" class="expert-weight">40%</span>
+              </div>
+              <div class="progress-bar"><div id="barExp2" class="progress-fill" style="width: 40%;"></div></div>
+              <small>Collision, friction & gravity vectors</small>
+            </div>
+
+            <div class="expert-box">
+              <div class="expert-header">
+                <span><i class="fa-solid fa-language text-green"></i> Vision-Language Expert</span>
+                <span id="weightExp3" class="expert-weight">15%</span>
+              </div>
+              <div class="progress-bar"><div id="barExp3" class="progress-fill" style="width: 15%;"></div></div>
+              <small>Embodied agent instruction alignment</small>
+            </div>
+
+            <div class="expert-box">
+              <div class="expert-header">
+                <span><i class="fa-solid fa-arrows-split-up-and-left text-green"></i> Latent Diffusion Expert</span>
+                <span id="weightExp4" class="expert-weight">10%</span>
+              </div>
+              <div class="progress-bar"><div id="barExp4" class="progress-fill" style="width: 10%;"></div></div>
+              <small>Future state vector synthesis</small>
+            </div>
+          </div>
+
+          <div class="form-row margin-top-card">
+            <button id="simMotBtn" class="btn-primary full-width">
+              <i class="fa-solid fa-bolt"></i> Simulate MoT Expert Routing & Physical Dynamics
+            </button>
+          </div>
+          <div id="motAnalysisOutput" class="mot-analysis-text hidden"></div>
+        </div>
       </div>
 
       <!-- View Tab 3: API Key Load Balancer & Telemetry -->
