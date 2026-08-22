@@ -591,6 +591,39 @@ body {
   color: #000;
 }
 
+/* Select & Dropdown Selectors */
+select,
+.select-full,
+#voiceSelect,
+#modelSelect,
+#cosmosRes,
+#cosmosFps,
+#cosmosWorkflow,
+#nemoSetupMode {
+  background-color: #121619 !important;
+  color: var(--nvidia-green-light) !important;
+  border: 1px solid rgba(118, 185, 0, 0.4) !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  outline: none;
+}
+
+select option,
+#voiceSelect option,
+#modelSelect option,
+#cosmosRes option,
+#cosmosFps option,
+#cosmosWorkflow option,
+#nemoSetupMode option {
+  background-color: #121619 !important;
+  color: #ffffff !important;
+  padding: 10px !important;
+  font-weight: 500 !important;
+}
+
 .msg-bubble {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--border-glass);

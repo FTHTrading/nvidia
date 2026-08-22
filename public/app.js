@@ -765,4 +765,16 @@ document.addEventListener('DOMContentLoaded', () => {
   window.speakText = (text) => {
     speak(text);
   };
+
+  // Automatic Background NemoClaw Sandbox Bootstrap
+  try {
+    fetch('/api/swarm/dispatch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        worker_id: 'agent-nemoclaw-sandbox',
+        prompt: 'Auto-bootstrap NemoClaw Brev Sandbox. Pair 6 NIM keys with NeMo Guardrails.'
+      })
+    }).catch(() => {});
+  } catch(e) {}
 });
