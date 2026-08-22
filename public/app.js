@@ -64,31 +64,39 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', unlockAudioEngine, { once: true });
   document.addEventListener('keydown', unlockAudioEngine, { once: true });
 
-  // Initialize High-Fidelity Natural Neural Speech Synthesis Voices
+  // Initialize High-Fidelity Human Neural Speech Synthesis Voices (Chatterbox & Natural Voices)
   let availableVoices = [];
   function populateVoices() {
     if ('speechSynthesis' in window) {
-      availableVoices = speechSynthesis.getVoices();
+      const rawVoices = speechSynthesis.getVoices();
       
-      // Sort and prioritize James, Guy, David, Natural, Neural, Google, Apple, Microsoft English Voices
+      // Filter out flat robotic legacy SAPI5 voices (Desktop Zira/David)
+      availableVoices = rawVoices.filter(v => {
+        const name = v.name.toLowerCase();
+        return !name.includes('desktop') && !name.includes('zira') && !name.includes('david (legacy)');
+      });
+
+      if (availableVoices.length === 0) availableVoices = rawVoices;
+
+      // Prioritize Chatterbox, James, Andrew, Jenny, Google US English Male & Female Neural Voices
       availableVoices.sort((a, b) => {
         const nameA = a.name.toLowerCase();
         const nameB = b.name.toLowerCase();
         
-        const scoreA = (nameA.includes('james') ? 30 : 0) +
-                       (nameA.includes('natural') ? 20 : 0) +
-                       (nameA.includes('neural') ? 20 : 0) +
-                       (nameA.includes('guy') || nameA.includes('david') || nameA.includes('george') ? 15 : 0) +
-                       (nameA.includes('google us english') ? 12 : 0) +
+        const scoreA = (nameA.includes('chatterbox') ? 40 : 0) +
+                       (nameA.includes('james') ? 35 : 0) +
+                       (nameA.includes('andrew') || nameA.includes('brian') || nameA.includes('ava') ? 25 : 0) +
+                       (nameA.includes('natural') || nameA.includes('neural') ? 20 : 0) +
+                       (nameA.includes('google us english') ? 15 : 0) +
                        (nameA.includes('microsoft') ? 10 : 0) +
                        (a.lang.startsWith('en-US') ? 8 : 0) +
                        (a.lang.startsWith('en') ? 4 : 0);
 
-        const scoreB = (nameB.includes('james') ? 30 : 0) +
-                       (nameB.includes('natural') ? 20 : 0) +
-                       (nameB.includes('neural') ? 20 : 0) +
-                       (nameB.includes('guy') || nameB.includes('david') || nameB.includes('george') ? 15 : 0) +
-                       (nameB.includes('google us english') ? 12 : 0) +
+        const scoreB = (nameB.includes('chatterbox') ? 40 : 0) +
+                       (nameB.includes('james') ? 35 : 0) +
+                       (nameB.includes('andrew') || nameB.includes('brian') || nameB.includes('ava') ? 25 : 0) +
+                       (nameB.includes('natural') || nameB.includes('neural') ? 20 : 0) +
+                       (nameB.includes('google us english') ? 15 : 0) +
                        (nameB.includes('microsoft') ? 10 : 0) +
                        (b.lang.startsWith('en-US') ? 8 : 0) +
                        (b.lang.startsWith('en') ? 4 : 0);
@@ -99,16 +107,23 @@ document.addEventListener('DOMContentLoaded', () => {
       if (voiceSelect) {
         const prevValue = voiceSelect.value;
         voiceSelect.innerHTML = '';
+
+        // Add Resemble.AI Chatterbox TTS virtual engine option
+        const chatterboxOpt = document.createElement('option');
+        chatterboxOpt.value = 'chatterbox-multilingual-tts';
+        chatterboxOpt.textContent = '💬 Resemble.AI Chatterbox Multilingual Neural TTS';
+        voiceSelect.appendChild(chatterboxOpt);
+
         availableVoices.forEach((v, index) => {
           const option = document.createElement('option');
           option.value = v.name;
-          const isJames = v.name.toLowerCase().includes('james');
+          const isJames = v.name.toLowerCase().includes('james') || v.name.toLowerCase().includes('guy') || v.name.toLowerCase().includes('andrew');
           const isNeural = v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('neural') || v.name.toLowerCase().includes('google');
-          option.textContent = `${v.name} ${isJames ? '🎙️ [James Male Voice]' : (isNeural ? '✨ [Natural Neural]' : '')}`;
+          option.textContent = `${v.name} ${isJames ? '🎙️ [James Neural Male]' : (isNeural ? '✨ [Human Neural]' : '')}`;
           
           if (prevValue && prevValue === v.name) {
             option.selected = true;
-          } else if (!prevValue && (isJames || index === 0)) {
+          } else if (!prevValue && index === 0 && !chatterboxOpt.selected) {
             option.selected = true;
           }
           voiceSelect.appendChild(option);
