@@ -14,12 +14,14 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static('public'));
 
-// 4 Active NVIDIA API Keys from nvidiaapi.env
+// 6 Active NVIDIA API Keys from Pool
 const NVIDIA_KEYS = [
   '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',
   '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',
   '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',
-  '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'
+  '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',
+  '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',
+  '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'
 ];
 
 let keyIndex = 0;
@@ -108,7 +110,6 @@ app.post('/api/chat/completions', async (req, res) => {
   const isStream = body.stream === true;
   const requestedModel = body.model || 'nvidia/nemotron-3.5-lightning-30b-a3b';
 
-  // Candidate models to try in sequence if requested model fails
   const candidateModels = [
     requestedModel,
     'nvidia/nemotron-3.5-lightning-30b-a3b',

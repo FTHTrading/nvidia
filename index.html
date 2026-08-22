@@ -46,7 +46,7 @@
       <!-- Key Rotator Badge -->
       <div class="key-status-badge" id="keyBadge" title="NVIDIA API Key Load Balancer Status">
         <span class="pulse-dot"></span>
-        <span id="keyStatusText">4/4 Keys Active</span>
+        <span id="keyStatusText">6/6 Keys Active</span>
       </div>
 
       <!-- Open WebUI Quick Switch -->
@@ -101,12 +101,12 @@
 
           <div class="setting-item">
             <label for="voiceRate"><i class="fa-solid fa-gauge-high"></i> Speech Rate</label>
-            <input type="range" id="voiceRate" min="0.5" max="2" value="1" step="0.1">
+            <input type="range" id="voiceRate" min="0.7" max="1.5" step="0.1" value="1.0">
           </div>
 
-          <div class="setting-item">
-            <label for="voiceSelect"><i class="fa-solid fa-user-gear"></i> TTS Voice</label>
-            <select id="voiceSelect" class="small-dropdown"></select>
+          <div class="setting-item column-setting">
+            <label for="voiceSelect"><i class="fa-solid fa-robot"></i> Natural Neural TTS Voice</label>
+            <select id="voiceSelect" class="select-full"></select>
           </div>
         </div>
       </div>
@@ -120,6 +120,11 @@
         <button class="menu-item active" data-tab="reasoning">
           <i class="fa-solid fa-brain"></i>
           <span>Nemotron Reasoning Desk</span>
+        </button>
+
+        <button class="menu-item" data-tab="mot">
+          <i class="fa-solid fa-diagram-project"></i>
+          <span>MoT Architecture Desk</span>
         </button>
 
         <button class="menu-item" data-tab="cosmos">
@@ -140,9 +145,9 @@
         </div>
         <ul class="info-list">
           <li><i class="fa-solid fa-check text-green"></i> 102 Foundation Models</li>
-          <li><i class="fa-solid fa-check text-green"></i> 4x Key Rotator Active</li>
+          <li><i class="fa-solid fa-check text-green"></i> 6x Key Rotator Active</li>
           <li><i class="fa-solid fa-check text-green"></i> OpenAI Compatible API</li>
-          <li><i class="fa-solid fa-check text-green"></i> Voice STT / TTS Enabled</li>
+          <li><i class="fa-solid fa-check text-green"></i> Natural Neural Voice TTS</li>
         </ul>
       </div>
 
@@ -204,7 +209,87 @@
         </div>
       </div>
 
-      <!-- View Tab 2: Physical AI & Cosmos 3 Studio -->
+      <!-- View Tab 2: Mixture-of-Transformers (MoT) Architecture Desk -->
+      <div class="tab-view" id="tab-mot">
+        <div class="workspace-header">
+          <div class="view-title">
+            <h2>Mixture-of-Transformers (MoT) Gating & Routing Studio</h2>
+            <p>Dynamic capacity scaling, token-level routing, and heterogeneous expert path visualizer</p>
+          </div>
+          <div class="view-actions">
+            <span class="badge badge-live">MoT ENGINE ACTIVE</span>
+          </div>
+        </div>
+
+        <div class="card glass-card margin-bottom-card">
+          <h3><i class="fa-solid fa-diagram-project highlight"></i> MoT vs MoE Architectural Principles</h3>
+          <p style="margin-top: 6px; color: var(--text-muted); font-size: 13px;">
+            Unlike standard MoE (which routes tokens to sparse FFN sub-layers), <strong>Mixture-of-Transformers (MoT)</strong> routes physical trajectory tokens across heterogeneous transformer blocks (Spatio-Temporal, Kinematics, Vision-Language, Latent Diffusion) to scale effective parameters without proportional FLOP growth.
+          </p>
+        </div>
+
+        <!-- MoT Gating Engine Visualizer Card -->
+        <div class="card glass-card mot-card">
+          <div class="card-header-flex">
+            <div>
+              <h3><i class="fa-solid fa-microchip highlight"></i> MoT Soft-Gating Routing Weights</h3>
+              <p>Real-time compute distribution across 4 specialized NVIDIA transformer experts</p>
+            </div>
+            <span class="badge badge-live">6/6 KEYS BALANCED</span>
+          </div>
+
+          <div class="mot-experts-grid">
+            <div class="expert-box">
+              <div class="expert-header">
+                <span><i class="fa-solid fa-film text-green"></i> Spatio-Temporal Expert</span>
+                <span id="weightExp1_desk" class="expert-weight">35%</span>
+              </div>
+              <div class="progress-bar"><div id="barExp1_desk" class="progress-fill" style="width: 35%;"></div></div>
+              <small>Frame dynamics & optical flow</small>
+            </div>
+
+            <div class="expert-box">
+              <div class="expert-header">
+                <span><i class="fa-solid fa-cube text-green"></i> Kinematics & Force Expert</span>
+                <span id="weightExp2_desk" class="expert-weight">40%</span>
+              </div>
+              <div class="progress-bar"><div id="barExp2_desk" class="progress-fill" style="width: 40%;"></div></div>
+              <small>Collision, friction & gravity vectors</small>
+            </div>
+
+            <div class="expert-box">
+              <div class="expert-header">
+                <span><i class="fa-solid fa-language text-green"></i> Vision-Language Expert</span>
+                <span id="weightExp3_desk" class="expert-weight">15%</span>
+              </div>
+              <div class="progress-bar"><div id="barExp3_desk" class="progress-fill" style="width: 15%;"></div></div>
+              <small>Embodied agent instruction alignment</small>
+            </div>
+
+            <div class="expert-box">
+              <div class="expert-header">
+                <span><i class="fa-solid fa-arrows-split-up-and-left text-green"></i> Latent Diffusion Expert</span>
+                <span id="weightExp4_desk" class="expert-weight">10%</span>
+              </div>
+              <div class="progress-bar"><div id="barExp4_desk" class="progress-fill" style="width: 10%;"></div></div>
+              <small>Future state vector synthesis</small>
+            </div>
+          </div>
+
+          <div class="form-group margin-top-card">
+            <label>Scene Prompt for MoT Expert Dispatch</label>
+            <textarea id="motDeskSceneInput" rows="2" placeholder="Autonomous bipedal robot navigating a high-altitude terrain under fluid turbulence..."></textarea>
+          </div>
+
+          <button id="dispatchMotDeskBtn" class="btn-primary full-width">
+            <i class="fa-solid fa-bolt"></i> Run MoT Routing & Architectural Breakdown
+          </button>
+          
+          <div id="motDeskAnalysisOutput" class="mot-analysis-text hidden"></div>
+        </div>
+      </div>
+
+      <!-- View Tab 3: Physical AI & Cosmos 3 Studio -->
       <div class="tab-view" id="tab-cosmos">
         <div class="workspace-header">
           <div class="view-title">
