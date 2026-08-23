@@ -185,6 +185,11 @@
           <span>Physical AI & Cosmos 3</span>
         </button>
 
+        <button class="menu-item" data-tab="obsidian">
+          <i class="fa-solid fa-book-bookmark text-green"></i>
+          <span>Obsidian Brain & Vault</span>
+        </button>
+
         <button class="menu-item" data-tab="keys">
           <i class="fa-solid fa-key"></i>
           <span>API Key Load Balancer</span>
@@ -810,6 +815,45 @@
             </button>
           </div>
           <div id="motAnalysisOutput" class="mot-analysis-text hidden" style="margin-top: 10px;"></div>
+        </div>
+      </div>
+
+      <!-- View Tab: Obsidian Vault Knowledge & Brain Bridge -->
+      <div class="tab-view" id="tab-obsidian">
+        <div class="workspace-header">
+          <div class="view-title">
+            <h2>Obsidian Vault Knowledge Bridge & Real-Time Sync</h2>
+            <p>Live memory synchronization with C:\Users\Kevan\Obsidian-Vault (UnyKorn LLC Empire, MOCs, RWA Ledgers & Receipts)</p>
+          </div>
+          <div class="view-actions">
+            <button id="refreshObsidianBtn" class="btn-primary"><i class="fa-solid fa-rotate"></i> Rescan Obsidian Vault</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 16px; flex: 1; min-height: 0; margin-bottom: 16px;">
+          <!-- Left Column: Obsidian Note Explorer -->
+          <div class="card glass-card" style="display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h3><i class="fa-solid fa-book-bookmark highlight"></i> Indexed Vault Notes</h3>
+              <span id="obsidianCountBadge" class="badge badge-live">SCANNING...</span>
+            </div>
+            
+            <input type="text" id="obsidianSearchInput" placeholder="Search vault notes (MOC, Ledger, Constitution)..." style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); border-radius: 6px; color: #fff; font-size: 12px; margin-bottom: 10px;">
+
+            <div id="obsidianFileList" class="info-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+              <p><i class="fa-solid fa-spinner fa-spin"></i> Loading Obsidian Vault index...</p>
+            </div>
+          </div>
+
+          <!-- Right Column: Note Inspector & Live Receipt Log -->
+          <div class="card glass-card" style="display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h3 id="obsidianCurrentNoteTitle"><i class="fa-solid fa-file-lines highlight"></i> Note Inspector: 00-MASTER-MOC.md</h3>
+              <button id="logToObsidianBtn" class="btn-secondary btn-sm"><i class="fa-solid fa-pen-to-square"></i> Log Receipt to Vault</button>
+            </div>
+
+            <div id="obsidianNoteViewer" class="mot-analysis-text" style="flex: 1; min-height: 280px; overflow-y: auto; white-space: pre-wrap; font-family: 'Fira Code', monospace; font-size: 12px; line-height: 1.6;">Select a note from the left to view contents.</div>
+          </div>
         </div>
       </div>
 
