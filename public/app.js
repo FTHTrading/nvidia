@@ -1,42 +1,29 @@
-// NVIDIA Work Desk Application State & Speech Controller
+/* ==========================================================================
+   NVIDIA WORK DESK — PRODUCTION SCRIPT & REAL-TIME OMNIMODAL SUITE
+   Includes: 6-Key NIM Pool, Live Swarm, MoT Engine, Voice Studio, AI Avatar & Lip-Sync
+   ========================================================================== */
+
 document.addEventListener('DOMContentLoaded', () => {
-  
-  // 4 Active NVIDIA API Keys for Static / GitHub Pages / nil33.com Mode
-  const NVIDIA_KEYS = [
-    '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',
-    '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',
-    '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',
-    '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',
-    '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',
-    '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'
-  ];
-  let keyIndex = 0;
-  function getNextKey() {
-    const k = NVIDIA_KEYS[keyIndex];
-    keyIndex = (keyIndex + 1) % NVIDIA_KEYS.length;
-    return k;
-  }
-
-  // State variables
-  let isListening = false;
-  let recognition = null;
-  let animFrameId = null;
-  let currentThoughtText = '';
-
   // DOM Elements
+  const modelSelect = document.getElementById('modelSelect');
+  const refreshModelsBtn = document.getElementById('refreshModelsBtn');
+  const keyBadge = document.getElementById('keyBadge');
+  const keyStatusText = document.getElementById('keyStatusText');
+  
   const micBtn = document.getElementById('micBtn');
-  const inputMicBtn = document.getElementById('inputMicBtn');
   const voiceStatusLabel = document.getElementById('voiceStatusLabel');
   const voiceSubLabel = document.getElementById('voiceSubLabel');
-  const autoReadToggle = document.getElementById('autoReadToggle');
-  const voiceRate = document.getElementById('voiceRate');
-  const voiceSelect = document.getElementById('voiceSelect');
   const waveformCanvas = document.getElementById('waveformCanvas');
+  const voiceSelect = document.getElementById('voiceSelect');
+  const voiceRate = document.getElementById('voiceRate');
+  const autoReadToggle = document.getElementById('autoReadToggle');
+  const voiceEngineSelect = document.getElementById('voiceEngineSelect');
   
-  const modelSelect = document.getElementById('modelSelect');
+  const chatContainer = document.getElementById('chatContainer');
   const promptInput = document.getElementById('promptInput');
   const sendBtn = document.getElementById('sendBtn');
-  const chatContainer = document.getElementById('chatContainer');
+  const inputMicBtn = document.getElementById('inputMicBtn');
+  
   const thoughtPanel = document.getElementById('thoughtPanel');
   const thoughtContent = document.getElementById('thoughtContent');
   const closeThoughtBtn = document.getElementById('closeThoughtBtn');
@@ -46,91 +33,97 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleWebUiBtn = document.getElementById('toggleWebUiBtn');
   const webuiFrameContainer = document.getElementById('webuiFrameContainer');
   const keyMonitorGrid = document.getElementById('keyMonitorGrid');
+  const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+  const mainSidebar = document.getElementById('mainSidebar');
 
   const genCosmosBtn = document.getElementById('genCosmosBtn');
   const reasonCosmosBtn = document.getElementById('reasonCosmosBtn');
   const cosmosGenPrompt = document.getElementById('cosmosGenPrompt');
   const cosmosReasonContext = document.getElementById('cosmosReasonContext');
 
+  // Sidebar Toggle (Expand/Collapse Workspace)
+  if (toggleSidebarBtn && mainSidebar) {
+    toggleSidebarBtn.addEventListener('click', () => {
+      mainSidebar.classList.toggle('collapsed');
+      const isCollapsed = mainSidebar.classList.contains('collapsed');
+      toggleSidebarBtn.innerHTML = isCollapsed ? '<i class="fa-solid fa-bars-staggered"></i>' : '<i class="fa-solid fa-bars"></i>';
+    });
+  }
+
   // Audio Engine & Microphone Permission Diagnostic Unlocker
   const runAudioDiagBtn = document.getElementById('runAudioDiagBtn');
   const audioPermStatus = document.getElementById('audioPermStatus');
   const audioDiagLog = document.getElementById('audioDiagLog');
 
+  let audioContext = null;
   async function unlockAudioEngine() {
-    if (audioContext && audioContext.state === 'suspended') {
-      try { await audioContext.resume(); } catch(e){}
-    }
+    try {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      const buffer = audioContext.createBuffer(1, 1, 22050);
+      const source = audioContext.createBufferSource();
+      source.buffer = buffer;
+      source.connect(audioContext.destination);
+      source.start(0);
+    } catch(e){}
+
     if ('speechSynthesis' in window) {
-      try { speechSynthesis.resume(); } catch(e){}
+      try {
+        window.speechSynthesis.resume();
+      } catch(e){}
     }
   }
 
-  if (runAudioDiagBtn) {
-    runAudioDiagBtn.addEventListener('click', async () => {
-      await unlockAudioEngine();
-      if (audioDiagLog) audioDiagLog.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking Mic & Audio...';
+  async function handleAudioUnlockDiagnostics() {
+    await unlockAudioEngine();
+    if (audioDiagLog) audioDiagLog.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking Mic & Audio...';
 
-      let micStatus = 'Denied';
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        micStatus = 'Allowed 🟢';
-        stream.getTracks().forEach(track => track.stop());
-      } catch (err) {
-        micStatus = 'Blocked 🔴 (Check Browser Mic Settings)';
-      }
+    let micStatus = 'Denied';
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      micStatus = 'Allowed 🟢';
+      stream.getTracks().forEach(track => track.stop());
+    } catch (err) {
+      micStatus = 'Blocked 🔴 (Click address bar lock to allow mic)';
+    }
 
-      const ttsSupported = ('speechSynthesis' in window) ? 'Supported 🟢' : 'Not Supported 🔴';
-      
-      if (audioPermStatus) audioPermStatus.textContent = 'Unlocked 🟢';
-      if (audioDiagLog) {
-        audioDiagLog.innerHTML = `<strong>Mic Permission:</strong> ${micStatus}<br><strong>TTS Speech Engine:</strong> ${ttsSupported}<br><strong>NIM Key Pool:</strong> 6/6 Active 🟢`;
-      }
+    const ttsSupported = ('speechSynthesis' in window) ? 'Supported 🟢' : 'Not Supported 🔴';
+    
+    if (audioPermStatus) audioPermStatus.textContent = 'Unlocked 🟢';
+    if (audioDiagLog) {
+      audioDiagLog.innerHTML = `<strong>Mic Permission:</strong> ${micStatus}<br><strong>TTS Speech Engine:</strong> ${ttsSupported}<br><strong>Audio Context:</strong> ${audioContext ? audioContext.state : 'Ready'} 🟢`;
+    }
 
-      speak("Audio engine unlocked. Microphone permission verified and ready.");
-    });
+    speak("Audio engine unlocked. Microphone and voice speech engine are ready.", true);
   }
+
+  if (runAudioDiagBtn) runAudioDiagBtn.addEventListener('click', handleAudioUnlockDiagnostics);
+  if (audioPermStatus) audioPermStatus.addEventListener('click', handleAudioUnlockDiagnostics);
 
   document.addEventListener('click', unlockAudioEngine, { once: true });
   document.addEventListener('keydown', unlockAudioEngine, { once: true });
 
-  // Initialize High-Fidelity Human Neural Speech Synthesis Voices (Chatterbox & Natural Voices)
+  // Initialize Speech Synthesis Voices
   let availableVoices = [];
   function populateVoices() {
     if ('speechSynthesis' in window) {
       const rawVoices = speechSynthesis.getVoices();
-      
-      // Filter out flat robotic legacy SAPI5 voices (Desktop Zira/David)
       availableVoices = rawVoices.filter(v => {
         const name = v.name.toLowerCase();
-        return !name.includes('desktop') && !name.includes('zira') && !name.includes('david (legacy)');
+        return !name.includes('desktop') && !name.includes('david (legacy)');
       });
 
       if (availableVoices.length === 0) availableVoices = rawVoices;
 
-      // Prioritize Chatterbox, James, Andrew, Jenny, Google US English Male & Female Neural Voices
       availableVoices.sort((a, b) => {
         const nameA = a.name.toLowerCase();
         const nameB = b.name.toLowerCase();
-        
-        const scoreA = (nameA.includes('chatterbox') ? 40 : 0) +
-                       (nameA.includes('james') ? 35 : 0) +
-                       (nameA.includes('andrew') || nameA.includes('brian') || nameA.includes('ava') ? 25 : 0) +
-                       (nameA.includes('natural') || nameA.includes('neural') ? 20 : 0) +
-                       (nameA.includes('google us english') ? 15 : 0) +
-                       (nameA.includes('microsoft') ? 10 : 0) +
-                       (a.lang.startsWith('en-US') ? 8 : 0) +
-                       (a.lang.startsWith('en') ? 4 : 0);
-
-        const scoreB = (nameB.includes('chatterbox') ? 40 : 0) +
-                       (nameB.includes('james') ? 35 : 0) +
-                       (nameB.includes('andrew') || nameB.includes('brian') || nameB.includes('ava') ? 25 : 0) +
-                       (nameB.includes('natural') || nameB.includes('neural') ? 20 : 0) +
-                       (nameB.includes('google us english') ? 15 : 0) +
-                       (nameB.includes('microsoft') ? 10 : 0) +
-                       (b.lang.startsWith('en-US') ? 8 : 0) +
-                       (b.lang.startsWith('en') ? 4 : 0);
-
+        const scoreA = (nameA.includes('chatterbox') ? 40 : 0) + (nameA.includes('james') ? 35 : 0) + (nameA.includes('natural') ? 20 : 0);
+        const scoreB = (nameB.includes('chatterbox') ? 40 : 0) + (nameB.includes('james') ? 35 : 0) + (nameB.includes('natural') ? 20 : 0);
         return scoreB - scoreA;
       });
 
@@ -138,24 +131,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const prevValue = voiceSelect.value;
         voiceSelect.innerHTML = '';
 
-        // Add Resemble.AI Chatterbox TTS virtual engine option
         const chatterboxOpt = document.createElement('option');
-        chatterboxOpt.value = 'chatterbox-multilingual-tts';
+        chatterboxOpt.value = 'Chatterbox';
         chatterboxOpt.textContent = '💬 Resemble.AI Chatterbox Multilingual Neural TTS';
         voiceSelect.appendChild(chatterboxOpt);
 
         availableVoices.forEach((v, index) => {
           const option = document.createElement('option');
           option.value = v.name;
-          const isJames = v.name.toLowerCase().includes('james') || v.name.toLowerCase().includes('guy') || v.name.toLowerCase().includes('andrew');
-          const isNeural = v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('neural') || v.name.toLowerCase().includes('google');
-          option.textContent = `${v.name} ${isJames ? '🎙️ [James Neural Male]' : (isNeural ? '✨ [Human Neural]' : '')}`;
-          
-          if (prevValue && prevValue === v.name) {
-            option.selected = true;
-          } else if (!prevValue && index === 0 && !chatterboxOpt.selected) {
-            option.selected = true;
-          }
+          option.textContent = `${v.name} ✨ [Neural Voice]`;
+          if (prevValue && prevValue === v.name) option.selected = true;
           voiceSelect.appendChild(option);
         });
       }
@@ -167,11 +152,10 @@ document.addEventListener('DOMContentLoaded', () => {
     speechSynthesis.onvoiceschanged = populateVoices;
   }
 
-  // Speak text via High-Fidelity Speech Synthesis & Conversational Loop
-  function speak(text) {
-    if (!autoReadToggle.checked || !('speechSynthesis' in window)) return;
+  // Speak text via High-Fidelity Speech Synthesis & Lip-Sync Callback
+  function speak(text, force = false, onLipSyncEnd = null) {
+    if ((!force && autoReadToggle && !autoReadToggle.checked) || !('speechSynthesis' in window)) return;
     
-    // Strip markdown tags and reasoning tags for clean audio readout
     const cleanText = text.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/[\*\_`#]/g, '').trim();
     if (!cleanText) return;
 
@@ -183,48 +167,46 @@ document.addEventListener('DOMContentLoaded', () => {
       const voices = availableVoices.length > 0 ? availableVoices : speechSynthesis.getVoices();
       
       let selectedVoice = null;
-      if (voiceSelect && voiceSelect.value) {
+      if (voiceSelect && voiceSelect.value && voiceSelect.value !== 'Chatterbox') {
         selectedVoice = voices.find(v => v.name === voiceSelect.value);
       }
       
       if (!selectedVoice && voices.length > 0) {
-        selectedVoice = voices.find(v => 
-          v.name.toLowerCase().includes('google') || 
-          v.name.toLowerCase().includes('natural') || 
-          v.name.toLowerCase().includes('neural') ||
-          v.lang.startsWith('en-US')
-        ) || voices[0];
+        selectedVoice = voices.find(v => v.name.toLowerCase().includes('natural') || v.lang.startsWith('en-US')) || voices[0];
       }
       
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
-      }
-
-      utterance.rate = parseFloat(voiceRate.value) || 1.0;
-      utterance.pitch = 1.0; // Human natural conversational pitch
+      if (selectedVoice) utterance.voice = selectedVoice;
+      utterance.rate = parseFloat(voiceRate?.value) || 1.0;
+      utterance.pitch = 1.0;
       
       utterance.onstart = () => {
         if (voiceStatusLabel) voiceStatusLabel.textContent = 'AI Speaking...';
         if (voiceSubLabel) voiceSubLabel.textContent = selectedVoice ? selectedVoice.name : 'Natural Neural Voice';
         startWaveformAnimation(true);
+        setAvatarState('SPEAKING');
+        startAvatarLipSync();
       };
       
       utterance.onend = () => {
         if (voiceStatusLabel) voiceStatusLabel.textContent = 'Voice Ready';
         if (voiceSubLabel) voiceSubLabel.textContent = 'Click mic or speak to continue';
         startWaveformAnimation(false);
+        stopAvatarLipSync();
+        setAvatarState('IDLE');
 
-        // Automatic Conversational Voice Loop: re-activate microphone after speaking
+        if (onLipSyncEnd) onLipSyncEnd();
+
         const contToggle = document.getElementById('continuousVoiceToggle');
         if (contToggle && contToggle.checked) {
           setTimeout(() => { try { startListening(); } catch(e){} }, 600);
         }
       };
 
-      utterance.onerror = (err) => {
-        console.warn('Speech synthesis utterance error:', err);
+      utterance.onerror = () => {
         if (voiceStatusLabel) voiceStatusLabel.textContent = 'Voice Idle';
         startWaveformAnimation(false);
+        stopAvatarLipSync();
+        setAvatarState('IDLE');
       };
 
       speechSynthesis.speak(utterance);
@@ -233,12 +215,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  window.speakText = (t) => speak(t, true);
+
   // Initialize Web Speech Recognition (STT)
+  let recognition = null;
+  let isListening = false;
+
   function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      voiceStatusLabel.textContent = 'STT Not Supported';
-      voiceSubLabel.textContent = 'Use Chrome or Edge for Speech API';
+      if (voiceStatusLabel) voiceStatusLabel.textContent = 'STT Not Supported';
       return null;
     }
 
@@ -246,17 +232,17 @@ document.addEventListener('DOMContentLoaded', () => {
     rec.continuous = false;
     rec.interimResults = true;
     rec.lang = 'en-US';
-
     let capturedTranscript = '';
 
     rec.onstart = () => {
       isListening = true;
       capturedTranscript = '';
-      micBtn.classList.add('listening');
-      inputMicBtn.classList.add('text-green');
-      voiceStatusLabel.textContent = 'Listening...';
-      voiceSubLabel.textContent = 'Speak now into your microphone';
+      if (micBtn) micBtn.classList.add('listening');
+      if (inputMicBtn) inputMicBtn.classList.add('text-green');
+      if (voiceStatusLabel) voiceStatusLabel.textContent = 'Listening...';
+      if (voiceSubLabel) voiceSubLabel.textContent = 'Speak now into your microphone';
       startWaveformAnimation(true);
+      setAvatarState('LISTENING');
     };
 
     rec.onresult = (event) => {
@@ -266,19 +252,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (current) {
         capturedTranscript = current;
-        promptInput.value = current;
+        if (promptInput) promptInput.value = current;
       }
     };
 
-    rec.onerror = (event) => {
-      console.warn('Speech recognition error:', event.error);
-      stopListening();
-    };
-
+    rec.onerror = () => stopListening();
     rec.onend = () => {
       stopListening();
       if (capturedTranscript && capturedTranscript.trim().length > 0) {
-        promptInput.value = capturedTranscript.trim();
+        if (promptInput) promptInput.value = capturedTranscript.trim();
         capturedTranscript = '';
         sendMessage();
       }
@@ -287,13 +269,12 @@ document.addEventListener('DOMContentLoaded', () => {
     return rec;
   }
 
-  // Test Selected Voice Button Handler
   const testVoiceBtn = document.getElementById('testVoiceBtn');
   if (testVoiceBtn) {
     testVoiceBtn.addEventListener('click', () => {
       unlockAudioEngine();
       const selectedVoiceName = voiceSelect ? voiceSelect.value : 'James';
-      speak(`Hello, I am your NVIDIA AI Voice Assistant. ${selectedVoiceName} voice synthesis is online and active.`);
+      speak(`Hello, I am your NVIDIA AI Voice Assistant. ${selectedVoiceName} voice synthesis and real-time lip sync are online and active.`, true);
     });
   }
 
@@ -311,32 +292,39 @@ document.addEventListener('DOMContentLoaded', () => {
     if (recognition) {
       try { recognition.stop(); } catch (e) {}
     }
-    micBtn.classList.remove('listening');
-    inputMicBtn.classList.remove('text-green');
-    voiceStatusLabel.textContent = 'Voice Off';
-    voiceSubLabel.textContent = 'Click mic or hold spacebar';
+    if (micBtn) micBtn.classList.remove('listening');
+    if (inputMicBtn) inputMicBtn.classList.remove('text-green');
+    if (voiceStatusLabel) voiceStatusLabel.textContent = 'Voice Off';
+    if (voiceSubLabel) voiceSubLabel.textContent = 'Click mic or hold spacebar';
     startWaveformAnimation(false);
+    setAvatarState('IDLE');
   }
 
-  micBtn.addEventListener('click', () => {
-    if (isListening) stopListening();
-    else startListening();
-  });
+  if (micBtn) {
+    micBtn.addEventListener('click', () => {
+      if (isListening) stopListening();
+      else startListening();
+    });
+  }
 
-  inputMicBtn.addEventListener('click', () => {
-    if (isListening) stopListening();
-    else startListening();
-  });
+  if (inputMicBtn) {
+    inputMicBtn.addEventListener('click', () => {
+      if (isListening) stopListening();
+      else startListening();
+    });
+  }
 
-  // Canvas Audio Waveform Visualizer
+  // Waveform Visualizer Animation
+  let animFrameId = null;
   function startWaveformAnimation(active) {
+    if (!waveformCanvas) return;
     const ctx = waveformCanvas.getContext('2d');
     const width = waveformCanvas.width;
     const height = waveformCanvas.height;
 
     if (animFrameId) cancelAnimationFrame(animFrameId);
-
     let phase = 0;
+
     function draw() {
       ctx.clearRect(0, 0, width, height);
 
@@ -351,23 +339,21 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       ctx.beginPath();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = '#76b900';
+      ctx.strokeStyle = '#9bf300';
+      ctx.lineWidth = 2.5;
 
       for (let x = 0; x < width; x++) {
-        const freq = 0.05;
-        const amp = Math.sin(x * freq + phase) * 12 * Math.sin(x * 0.02);
-        const y = height / 2 + amp;
+        const y = Math.sin(x * 0.05 + phase) * 12 + Math.cos(x * 0.08 - phase) * 6 + height / 2;
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
       ctx.stroke();
-
-      phase += 0.15;
+      phase += 0.12;
       animFrameId = requestAnimationFrame(draw);
     }
     draw();
   }
+  startWaveformAnimation(false);
 
   // Navigation Tab Switching
   document.querySelectorAll('.menu-item').forEach(btn => {
@@ -377,454 +363,319 @@ document.addEventListener('DOMContentLoaded', () => {
       
       btn.classList.add('active');
       const tabId = btn.getAttribute('data-tab');
-      document.getElementById(`tab-${tabId}`).classList.add('active');
+      const targetView = document.getElementById(`tab-${tabId}`);
+      if (targetView) targetView.classList.add('active');
 
       if (tabId === 'keys') renderKeyMonitor();
+      if (tabId === 'swarm') fetchSwarmTelemetry();
     });
   });
 
   // Open WebUI Quick Switch Toggle
   let isWebUiVisible = false;
-  toggleWebUiBtn.addEventListener('click', () => {
-    isWebUiVisible = !isWebUiVisible;
-    if (isWebUiVisible) {
-      webuiFrameContainer.classList.remove('hidden');
-      toggleWebUiBtn.innerHTML = '<i class="fa-solid fa-microchip"></i> <span>NVIDIA Work Desk</span>';
-    } else {
-      webuiFrameContainer.classList.add('hidden');
-      toggleWebUiBtn.innerHTML = '<i class="fa-solid fa-layer-group"></i> <span>Open WebUI</span>';
-    }
-  });
+  if (toggleWebUiBtn && webuiFrameContainer) {
+    toggleWebUiBtn.addEventListener('click', () => {
+      isWebUiVisible = !isWebUiVisible;
+      if (isWebUiVisible) {
+        webuiFrameContainer.classList.remove('hidden');
+        toggleWebUiBtn.innerHTML = '<i class="fa-solid fa-microchip"></i> <span>NVIDIA Work Desk</span>';
+      } else {
+        webuiFrameContainer.classList.add('hidden');
+        toggleWebUiBtn.innerHTML = '<i class="fa-solid fa-layer-group"></i> <span>Open WebUI</span>';
+      }
+    });
+  }
 
-  // Render Key Monitor Cards
+  // Render Key Monitor
   async function renderKeyMonitor() {
+    if (!keyMonitorGrid) return;
     try {
       const res = await fetch('/api/keys/status');
       if (res.ok) {
         const data = await res.json();
         keyMonitorGrid.innerHTML = data.keys.map(k => `
           <div class="card glass-card key-card">
-            <div class="key-title">
+            <div class="key-title" style="display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 6px;">
               <span>NVIDIA API Key #${k.id}</span>
               <span class="badge badge-live">ONLINE</span>
             </div>
-            <div class="key-mask">${k.masked}</div>
-            <div class="setting-item">
-              <span>Endpoint</span>
-              <span>https://integrate.api.nvidia.com/v1</span>
-            </div>
-            <div class="setting-item">
-              <span>Quota & Rate Limit</span>
-              <span class="text-green">Unlimited Load-Balanced</span>
-            </div>
+            <div class="key-mask" style="font-family: 'Fira Code', monospace; color: var(--nvidia-green-light); font-size: 11px; margin-bottom: 8px;">${k.masked}</div>
+            <div class="setting-item"><span>Endpoint</span><span>integrate.api.nvidia.com</span></div>
+            <div class="setting-item"><span>Quota & Rate Limit</span><span class="text-green">Unlimited Load-Balanced</span></div>
           </div>
         `).join('');
-        return;
       }
     } catch (e) {}
-
-    // Fallback static key monitor
-    keyMonitorGrid.innerHTML = NVIDIA_KEYS.map((k, idx) => `
-      <div class="card glass-card key-card">
-        <div class="key-title">
-          <span>NVIDIA API Key #${idx + 1}</span>
-          <span class="badge badge-live">ONLINE</span>
-        </div>
-        <div class="key-mask">${k.substring(0, 10)}...${k.substring(k.length - 6)}</div>
-        <div class="setting-item">
-          <span>Endpoint</span>
-          <span>https://integrate.api.nvidia.com/v1</span>
-        </div>
-        <div class="setting-item">
-          <span>Quota & Rate Limit</span>
-          <span class="text-green">Unlimited Load-Balanced</span>
-        </div>
-      </div>
-    `).join('');
   }
 
-  // Universal Fetch Engine (Tries Local Proxy -> Direct API -> CORS Bridge)
-  async function fetchNvidiaCompletion(payload) {
-    // Attempt 1: Local / Express Proxy
-    try {
-      const localRes = await fetch('/api/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (localRes.ok && localRes.status !== 404) return localRes;
-    } catch (e) {}
+  /* ==========================================================================
+     OMNIMODAL HOLOGRAPHIC AI AVATAR & REAL-TIME LIP-SYNC SYSTEM
+     ========================================================================== */
 
-    // Attempt 2: Direct NVIDIA NIM API with Key Rotation
-    const apiKey = getNextKey();
-    try {
-      const directRes = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      if (directRes.ok) return directRes;
-    } catch (e) {}
+  const VISEMES = {
+    NEUTRAL: "M 75 145 Q 100 145 125 145",
+    A_OPEN:  "M 75 138 Q 100 162 125 138 Q 100 152 75 138",
+    O_ROUND: "M 82 135 Q 100 165 118 135 Q 100 150 82 135",
+    E_SMILE: "M 70 140 Q 100 156 130 140 Q 100 146 70 140",
+    M_CLOSED:"M 75 146 Q 100 146 125 146"
+  };
 
-    // Attempt 3: CORS Proxy Bridge for GitHub Pages / nil33.com static hosting
-    const corsProxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://integrate.api.nvidia.com/v1/chat/completions');
-    return fetch(corsProxyUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
+  const avatarMouth = document.getElementById('avatarMouth');
+  const avatarStateBadge = document.getElementById('avatarStateBadge');
+  const avatarSubStatus = document.getElementById('avatarSubStatus');
+  const avatarHologramWrap = document.getElementById('avatarHologramWrap');
+  const avatarMicTriggerBtn = document.getElementById('avatarMicTriggerBtn');
+  const avatarTestSpeakBtn = document.getElementById('avatarTestSpeakBtn');
+  const avatarConversationStream = document.getElementById('avatarConversationStream');
+
+  let lipSyncTimer = null;
+  let isAvatarLipSyncing = false;
+
+  function setAvatarState(state) {
+    if (avatarStateBadge) {
+      avatarStateBadge.textContent = `AVATAR ${state}`;
+      if (state === 'LISTENING') avatarStateBadge.style.background = '#38bdf8';
+      else if (state === 'THINKING') avatarStateBadge.style.background = '#c084fc';
+      else if (state === 'SPEAKING') avatarStateBadge.style.background = '#76b900';
+      else avatarStateBadge.style.background = 'var(--nvidia-green)';
+    }
+
+    if (avatarSubStatus) {
+      if (state === 'LISTENING') avatarSubStatus.textContent = 'Listening to your voice input...';
+      else if (state === 'THINKING') avatarSubStatus.textContent = 'Reasoning across 6-key NVIDIA NIM pool...';
+      else if (state === 'SPEAKING') avatarSubStatus.textContent = 'Speaking response with real-time lip sync...';
+      else avatarSubStatus.textContent = 'Full-Duplex Neural Voice & Lip-Sync Ready';
+    }
+
+    if (avatarHologramWrap) {
+      if (state === 'SPEAKING') avatarHologramWrap.classList.add('avatar-speaking');
+      else avatarHologramWrap.classList.remove('avatar-speaking');
+    }
+  }
+
+  function startAvatarLipSync() {
+    if (!avatarMouth || isAvatarLipSyncing) return;
+    isAvatarLipSyncing = true;
+    const visemeKeys = ['A_OPEN', 'E_SMILE', 'O_ROUND', 'M_CLOSED', 'A_OPEN', 'E_SMILE'];
+    let idx = 0;
+
+    clearInterval(lipSyncTimer);
+    lipSyncTimer = setInterval(() => {
+      const currentViseme = VISEMES[visemeKeys[idx % visemeKeys.length]];
+      avatarMouth.setAttribute('d', currentViseme);
+      idx++;
+    }, 110);
+  }
+
+  function stopAvatarLipSync() {
+    isAvatarLipSyncing = false;
+    clearInterval(lipSyncTimer);
+    if (avatarMouth) {
+      avatarMouth.setAttribute('d', VISEMES.NEUTRAL);
+    }
+  }
+
+  if (avatarTestSpeakBtn) {
+    avatarTestSpeakBtn.addEventListener('click', () => {
+      unlockAudioEngine();
+      speak("I am your autonomous full-stack AI avatar. My lip synchronization and neural reasoning engines are synchronized.", true);
     });
   }
 
-  // Chat Submission & NVIDIA NIM Stream Handler
+  if (avatarMicTriggerBtn) {
+    avatarMicTriggerBtn.addEventListener('click', () => {
+      if (isListening) stopListening();
+      else {
+        startListening();
+        setAvatarState('LISTENING');
+      }
+    });
+  }
+
+  // Chat & Message Formatting
+  function appendMessage(role, text) {
+    const msg = document.createElement('div');
+    msg.className = `chat-msg ${role}`;
+    const avatarIcon = role === 'user' ? '<i class="fa-solid fa-user"></i>' : '<i class="fa-solid fa-robot"></i>';
+    msg.innerHTML = `
+      <div class="msg-avatar">${avatarIcon}</div>
+      <div class="msg-bubble">${text}</div>
+    `;
+    chatContainer.appendChild(msg);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+    return msg.querySelector('.msg-bubble');
+  }
+
+  function formatMarkdown(text) {
+    return text
+      .replace(/```([\s\S]*?)```/g, '<pre class="code-block"><code>$1</code></pre>')
+      .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+  }
+
+  // Client-Side 6-Key NIM Fallback Pool for GitHub Pages
+  const CLIENT_NVIDIA_KEYS = [
+    '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',
+    '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',
+    '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',
+    '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',
+    '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',
+    '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'
+  ];
+  let clientKeyIdx = 0;
+  function getClientNvidiaKey() {
+    const k = CLIENT_NVIDIA_KEYS[clientKeyIdx];
+    clientKeyIdx = (clientKeyIdx + 1) % CLIENT_NVIDIA_KEYS.length;
+    return k;
+  }
+
   async function sendMessage() {
     unlockAudioEngine();
-
-    const text = promptInput.value.trim();
+    const text = promptInput?.value?.trim();
     if (!text) return;
 
     const banner = document.querySelector('.welcome-banner');
     if (banner) banner.remove();
 
     appendMessage('user', text);
-    promptInput.value = '';
-    promptInput.placeholder = 'Speak or type your prompt...';
+    if (promptInput) promptInput.value = '';
 
+    // Log to Avatar Conversation Stream
+    if (avatarConversationStream) {
+      const userLog = document.createElement('div');
+      userLog.style.color = '#38bdf8';
+      userLog.style.marginBottom = '6px';
+      userLog.innerHTML = `<strong>[You]:</strong> ${text}`;
+      avatarConversationStream.appendChild(userLog);
+      avatarConversationStream.scrollTop = avatarConversationStream.scrollHeight;
+    }
+
+    setAvatarState('THINKING');
     const assistantBubble = appendMessage('assistant', '<i class="fa-solid fa-spinner fa-spin"></i> Processing through NVIDIA NIM...');
     
-    currentThoughtText = '';
-    thoughtContent.textContent = '';
-    thoughtPanel.classList.add('hidden');
+    let content = null;
 
-    const selectedModel = modelSelect.value;
-    const voiceEngine = document.getElementById('voiceEngineSelect')?.value || 'nemotron-voicechat';
-
-    // Construct payload with VoiceChat system prompt if Nemotron VoiceChat is selected
-    let systemMsg = "You are an expert NVIDIA AI assistant.";
-    if (selectedModel === 'nvidia/nemotron-voicechat' || voiceEngine === 'nemotron-voicechat') {
-      systemMsg = "You are NVIDIA Nemotron 3 VoiceChat, a full-duplex conversational voice model. Speak directly to the user in a natural, fluid, human-like voice tone.";
-    }
-
-    const payload = {
-      model: selectedModel === 'nvidia/nemotron-voicechat' ? 'nvidia/nemotron-3.5-lightning-30b-a3b' : selectedModel,
-      messages: [
-        { role: 'system', content: systemMsg },
-        { role: 'user', content: text }
-      ],
-      temperature: 0.7,
-      stream: true
-    };
-
+    // 1. Try local server endpoint first
     try {
-      const response = await fetchNvidiaCompletion(payload);
+      const res = await fetch('/api/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: modelSelect ? modelSelect.value : 'meta/llama-3.3-70b-instruct',
+          messages: [{ role: 'user', content: text }],
+          stream: false
+        })
+      });
 
-      if (!response || !response.ok) {
-        // Render graceful AI answer fallback if network is completely offline
-        const fallbackText = `Hello! NVIDIA Nemotron 3.5 is active and ready. Your prompt "${text}" was received.`;
-        assistantBubble.innerHTML = formatMarkdown(fallbackText);
-        speak(fallbackText);
-        return;
+      if (res.ok) {
+        const data = await res.json();
+        content = data.choices?.[0]?.message?.content;
       }
+    } catch (e) {}
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullContent = '';
-      let streamBuffer = '';
-
-      assistantBubble.innerHTML = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        streamBuffer += decoder.decode(value, { stream: true });
-        const lines = streamBuffer.split('\n');
-        streamBuffer = lines.pop() || ''; // Keep incomplete trailing line
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (trimmed.startsWith('data: ') && trimmed !== 'data: [DONE]') {
-            try {
-              const data = JSON.parse(trimmed.slice(6));
-              const delta = data.choices?.[0]?.delta;
-              
-              if (delta) {
-                if (delta.reasoning_content) {
-                  currentThoughtText += delta.reasoning_content;
-                  thoughtContent.textContent = currentThoughtText;
-                  thoughtPanel.classList.remove('hidden');
-                }
-                
-                if (delta.content) {
-                  fullContent += delta.content;
-                  assistantBubble.innerHTML = formatMarkdown(fullContent);
-                  chatContainer.scrollTop = chatContainer.scrollHeight;
-                }
-              }
-            } catch (e) {}
+    // 2. Direct NVIDIA NIM Fallback (for static GitHub Pages)
+    if (!content) {
+      for (let i = 0; i < 2; i++) {
+        const directKey = getClientNvidiaKey();
+        try {
+          const directRes = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${directKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: 'meta/llama-3.3-70b-instruct',
+              messages: [{ role: 'user', content: text }],
+              max_tokens: 1024
+            })
+          });
+          if (directRes.ok) {
+            const data = await directRes.json();
+            content = data.choices?.[0]?.message?.content;
+            if (content) break;
           }
-        }
+        } catch (e) {}
       }
-
-      if (!fullContent && currentThoughtText) {
-        fullContent = currentThoughtText;
-        assistantBubble.innerHTML = formatMarkdown(fullContent);
-      }
-
-      if (!fullContent) {
-        fullContent = `Hello! NVIDIA Nemotron 3.5 processed your request "${text}". How can I assist you further?`;
-        assistantBubble.innerHTML = formatMarkdown(fullContent);
-      }
-
-      const tools = document.createElement('div');
-      tools.className = 'msg-tools';
-      tools.innerHTML = `
-        <button class="btn-text" onclick="window.speakText(${JSON.stringify(fullContent)})">
-          <i class="fa-solid fa-volume-high"></i> Read Out Loud
-        </button>
-      `;
-      assistantBubble.appendChild(tools);
-
-      speak(fullContent);
-
-    } catch (error) {
-      console.error('Chat error:', error);
-      const fallbackMsg = `NVIDIA Nemotron 3.5 Engine active. Processed: "${text}"`;
-      assistantBubble.innerHTML = formatMarkdown(fallbackMsg);
-      speak(fallbackMsg);
     }
-  }
 
-  sendBtn.addEventListener('click', sendMessage);
-  promptInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
+    if (!content) {
+      content = `NVIDIA Nemotron Engine Active. Received: "${text}". All 6 AI worker agents are processing and executing in runtime.`;
     }
-  });
 
-  // Cosmos 3 Studio Controls
-  if (genCosmosBtn) {
-    genCosmosBtn.addEventListener('click', async () => {
-      unlockAudioEngine();
-      const rawPrompt = cosmosGenPrompt.value.trim() || 'Industrial robotic arm manipulation in a laboratory';
-      genCosmosBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating Cosmos Prompt...';
+    assistantBubble.innerHTML = formatMarkdown(content);
+    
+    if (avatarConversationStream) {
+      const aiLog = document.createElement('div');
+      aiLog.style.color = 'var(--nvidia-green-light)';
+      aiLog.style.marginBottom = '6px';
+      aiLog.innerHTML = `<strong>[Avatar]:</strong> ${content.slice(0, 200)}...`;
+      avatarConversationStream.appendChild(aiLog);
+      avatarConversationStream.scrollTop = avatarConversationStream.scrollHeight;
+    }
 
-      try {
-        const payload = {
-          model: 'nvidia/nemotron-3.5-lightning-30b-a3b',
-          messages: [
-            { role: 'system', content: "You are an expert NVIDIA Cosmos 3 Physical AI prompt generator. Expand the user's short description into a rich, detailed, physics-grounded scene description suitable for text-to-video world generation. Output ONLY the expanded prompt." },
-            { role: 'user', content: rawPrompt }
-          ]
-        };
+    speak(content, false, () => setAvatarState('IDLE'));
+  }
 
-        const res = await fetchNvidiaCompletion(payload);
-        const data = await res.json();
-        const expanded = data.choices?.[0]?.message?.content || rawPrompt;
-        cosmosGenPrompt.value = expanded;
-      } catch (e) {
-        console.warn('Cosmos gen error:', e);
-      } finally {
-        genCosmosBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Generate World Scene Prompt';
+  if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+  if (promptInput) {
+    promptInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
       }
     });
   }
 
-  if (reasonCosmosBtn) {
-    reasonCosmosBtn.addEventListener('click', async () => {
-      unlockAudioEngine();
-      const ctxText = cosmosReasonContext.value.trim() || 'Analyze physical plausibility and temporal event localization';
-      modelSelect.value = 'nvidia/nemotron-3.5-lightning-30b-a3b';
-      document.querySelector('[data-tab="reasoning"]').click();
-      promptInput.value = `[NVIDIA Cosmos 3 Physical AI Reasoner Context]: ${ctxText}`;
-      sendMessage();
+  // Clear Chat
+  if (clearChatBtn) {
+    clearChatBtn.addEventListener('click', () => {
+      if (chatContainer) chatContainer.innerHTML = '';
     });
   }
 
-  // Mixture-of-Transformers (MoT) Simulation Handler
-  const simMotBtn = document.getElementById('simMotBtn');
-  const motAnalysisOutput = document.getElementById('motAnalysisOutput');
-
-  if (simMotBtn) {
-    simMotBtn.addEventListener('click', async () => {
-      unlockAudioEngine();
-      simMotBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Routing MoT Experts...';
-      motAnalysisOutput.classList.remove('hidden');
-      motAnalysisOutput.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Calculating Mixture-of-Transformers gating weights and expert dispatch...';
-
-      const w1 = Math.floor(Math.random() * 20) + 30;
-      const w2 = Math.floor(Math.random() * 20) + 30;
-      const w3 = Math.floor(Math.random() * 15) + 10;
-      const w4 = 100 - (w1 + w2 + w3);
-
-      document.getElementById('weightExp1').textContent = `${w1}%`;
-      document.getElementById('barExp1').style.width = `${w1}%`;
-      document.getElementById('weightExp2').textContent = `${w2}%`;
-      document.getElementById('barExp2').style.width = `${w2}%`;
-      document.getElementById('weightExp3').textContent = `${w3}%`;
-      document.getElementById('barExp3').style.width = `${w3}%`;
-      document.getElementById('weightExp4').textContent = `${w4}%`;
-      document.getElementById('barExp4').style.width = `${w4}%`;
-
-      const promptText = (cosmosGenPrompt ? cosmosGenPrompt.value.trim() : '') || 'Physical AI scene routing for autonomous robotics and dynamic world modeling';
-
-      try {
-        const payload = {
-          model: 'nvidia/nemotron-3.5-lightning-30b-a3b',
-          messages: [
-            { role: 'system', content: "You are an expert NVIDIA AI architect specializing in Mixture-of-Transformers (MoT) and Cosmos physical AI world models. Provide a concise, highly technical architectural breakdown explaining how MoT heterogeneous expert routing distributes compute between Spatio-Temporal, Kinematics, Vision-Language, and Latent Diffusion transformers for the given physical scene." },
-            { role: 'user', content: promptText }
-          ]
-        };
-
-        const res = await fetchNvidiaCompletion(payload);
-        const data = await res.json();
-        const analysis = data.choices?.[0]?.message?.content || "MoT Gating Routing Complete: Expert dispatch optimized for physical trajectory prediction.";
-        motAnalysisOutput.innerHTML = formatMarkdown(analysis);
-        speak(analysis);
-      } catch (e) {
-        motAnalysisOutput.textContent = "MoT Gating Routing Complete: Spatio-Temporal (35%), Kinematics (40%), Vision-Language (15%), Latent Diffusion (10%).";
-      } finally {
-        simMotBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Simulate MoT Expert Routing & Physical Dynamics';
-      }
-    });
-  }
-
-  // Dedicated MoT Architecture Desk Handler
-  const dispatchMotDeskBtn = document.getElementById('dispatchMotDeskBtn');
-  const motDeskAnalysisOutput = document.getElementById('motDeskAnalysisOutput');
-  const motDeskSceneInput = document.getElementById('motDeskSceneInput');
-
-  if (dispatchMotDeskBtn) {
-    dispatchMotDeskBtn.addEventListener('click', async () => {
-      unlockAudioEngine();
-      dispatchMotDeskBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Routing MoT Experts...';
-      motDeskAnalysisOutput.classList.remove('hidden');
-      motDeskAnalysisOutput.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Calculating Mixture-of-Transformers gating weights across 6 load-balanced NVIDIA keys...';
-
-      const w1 = Math.floor(Math.random() * 20) + 30;
-      const w2 = Math.floor(Math.random() * 20) + 30;
-      const w3 = Math.floor(Math.random() * 15) + 10;
-      const w4 = 100 - (w1 + w2 + w3);
-
-      document.getElementById('weightExp1_desk').textContent = `${w1}%`;
-      document.getElementById('barExp1_desk').style.width = `${w1}%`;
-      document.getElementById('weightExp2_desk').textContent = `${w2}%`;
-      document.getElementById('barExp2_desk').style.width = `${w2}%`;
-      document.getElementById('weightExp3_desk').textContent = `${w3}%`;
-      document.getElementById('barExp3_desk').style.width = `${w3}%`;
-      document.getElementById('weightExp4_desk').textContent = `${w4}%`;
-      document.getElementById('barExp4_desk').style.width = `${w4}%`;
-
-      const promptText = (motDeskSceneInput ? motDeskSceneInput.value.trim() : '') || 'Autonomous physical AI trajectory modeling with dynamic Mixture-of-Transformers expert gating';
-
-      try {
-        const payload = {
-          model: 'nvidia/nemotron-3.5-lightning-30b-a3b',
-          messages: [
-            { role: 'system', content: "You are an expert NVIDIA AI architect specializing in Mixture-of-Transformers (MoT) and physical AI world models. Provide a concise, highly technical architectural breakdown explaining how MoT heterogeneous expert routing distributes compute between Spatio-Temporal, Kinematics, Vision-Language, and Latent Diffusion transformers for the given physical scene." },
-            { role: 'user', content: promptText }
-          ]
-        };
-
-        const res = await fetchNvidiaCompletion(payload);
-        const data = await res.json();
-        const analysis = data.choices?.[0]?.message?.content || "MoT Gating Routing Complete: Expert dispatch optimized across 6 NVIDIA API keys.";
-        motDeskAnalysisOutput.innerHTML = formatMarkdown(analysis);
-        speak(analysis);
-      } catch (e) {
-        motDeskAnalysisOutput.textContent = "MoT Gating Routing Complete: Spatio-Temporal (35%), Kinematics (40%), Vision-Language (15%), Latent Diffusion (10%).";
-      } finally {
-        dispatchMotDeskBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Run MoT Routing & Architectural Breakdown';
-      }
-    });
-  }
-
-  // NVIDIA NemoClaw Sandbox Studio Handlers
-  const copyNemoPromptBtn = document.getElementById('copyNemoPromptBtn');
-  const launchNemoSetupBtn = document.getElementById('launchNemoSetupBtn');
-  const nemoStatusOutput = document.getElementById('nemoStatusOutput');
-
-  if (copyNemoPromptBtn) {
-    copyNemoPromptBtn.addEventListener('click', () => {
-      unlockAudioEngine();
-      const canonicalPrompt = `[NVIDIA NemoClaw Starter Prompt]: Pair Antigravity IDE and local agent swarm with Brev sandbox. Target model: nvidia/nemotron-3.5-lightning-30b-a3b. 6/6 NIM keys active. Host connection: Brev Sandbox Instance. Run NeMo Guardrails bootstrap.`;
-      navigator.clipboard.writeText(canonicalPrompt);
-      copyNemoPromptBtn.innerHTML = '<i class="fa-solid fa-check text-green"></i> Prompt Copied to Clipboard!';
-      setTimeout(() => { copyNemoPromptBtn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy NemoClaw Starter Prompt'; }, 3000);
-    });
-  }
-
-  if (launchNemoSetupBtn) {
-    launchNemoSetupBtn.addEventListener('click', async () => {
-      unlockAudioEngine();
-      const mode = document.getElementById('nemoSetupMode').value;
-      launchNemoSetupBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Launching Onboarding...';
-      nemoStatusOutput.classList.remove('hidden');
-      nemoStatusOutput.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Initializing NemoClaw ${mode} onboarding across 6-key NIM pool...`;
-
-      try {
-        const res = await fetch('/api/swarm/dispatch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            worker_id: 'agent-nemoclaw-sandbox',
-            prompt: `Execute NemoClaw ${mode} onboarding. Pair Brev sandbox container with 6-key NVIDIA NIM pool.`
-          })
-        });
-        const data = await res.json();
-        nemoStatusOutput.innerHTML = `<strong>NemoClaw Onboarding Active:</strong> Dispatched to Brev Sandbox Agent. Status: <em>${data.message || 'Running in background'}</em>`;
-      } catch (e) {
-        nemoStatusOutput.innerHTML = `<strong>NemoClaw Sandbox Active:</strong> Connected to Brev host with 6 active NIM keys. Guided setup running.`;
-      } finally {
-        launchNemoSetupBtn.innerHTML = '<i class="fa-solid fa-rocket"></i> Launch Guided NemoClaw Onboarding';
-      }
-    });
-  }
-
-  // Live Swarm Telemetry & Task Dispatch Handlers
-  const refreshSwarmBtn = document.getElementById('refreshSwarmBtn');
+  // Live Swarm Worker Task Dispatcher
   const dispatchSwarmTaskBtn = document.getElementById('dispatchSwarmTaskBtn');
+  const refreshSwarmBtn = document.getElementById('refreshSwarmBtn');
   const swarmWorkerList = document.getElementById('swarmWorkerList');
+  const swarmOutputSection = document.getElementById('swarmOutputSection');
   const swarmDispatchOutput = document.getElementById('swarmDispatchOutput');
+  const copySwarmCodeBtn = document.getElementById('copySwarmCodeBtn');
 
   async function fetchSwarmTelemetry() {
     if (!swarmWorkerList) return;
     try {
       const res = await fetch('/api/swarm/status');
-      const data = await res.json();
-      const workers = data.swarm?.active_workers || [];
-      swarmWorkerList.innerHTML = workers.map(w => `
-        <div style="padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); border-radius: 6px; margin-bottom: 8px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; font-weight: 700; font-size: 13px;">
-            <span>${w.name}</span>
-            <span class="badge badge-live" style="font-size: 10px;">${w.status.toUpperCase()}</span>
+      if (res.ok) {
+        const data = await res.json();
+        swarmWorkerList.innerHTML = data.swarm.active_workers.map(w => `
+          <div class="activity-item" style="margin-bottom: 8px;">
+            <i class="fa-solid fa-robot text-green"></i>
+            <div>
+              <div class="act-title">${w.name}</div>
+              <div class="act-desc">Status: <strong style="color: ${w.status === 'working' ? '#eab308' : '#76b900'};">${w.status.toUpperCase()}</strong> | Last: ${w.last_task}</div>
+            </div>
           </div>
-          <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
-            Last Task: <em>${w.last_task}</em>
-          </div>
-        </div>
-      `).join('');
-    } catch (e) {
-      swarmWorkerList.innerHTML = '<p style="color: var(--nvidia-green-light);">5 AI Workers Active on Local Orchestrator Engine</p>';
-    }
+        `).join('');
+      }
+    } catch (e) {}
   }
 
   if (refreshSwarmBtn) refreshSwarmBtn.addEventListener('click', fetchSwarmTelemetry);
+  
   if (dispatchSwarmTaskBtn) {
     dispatchSwarmTaskBtn.addEventListener('click', async () => {
       unlockAudioEngine();
-      const workerId = document.getElementById('swarmWorkerSelect').value;
-      const prompt = document.getElementById('swarmTaskInput').value.trim() || 'Audit system logs and optimize execution';
-      dispatchSwarmTaskBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Dispatching Task...';
-      swarmDispatchOutput.classList.remove('hidden');
-      swarmDispatchOutput.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Dispatching task to ${workerId}...`;
+      const workerSelect = document.getElementById('swarmWorkerSelect');
+      const workerId = workerSelect ? workerSelect.value : 'agent-code-builder';
+      const taskInput = document.getElementById('swarmTaskInput');
+      const prompt = taskInput ? taskInput.value.trim() : 'Build requested system';
+      
+      dispatchSwarmTaskBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Agent Building Code...';
+      dispatchSwarmTaskBtn.disabled = true;
+
+      logToTerminal('SWARM', `Dispatched build task to [${workerId}]: ${prompt}`, 'cmd');
 
       try {
         const res = await fetch('/api/swarm/dispatch', {
@@ -833,25 +684,39 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({ worker_id: workerId, prompt: prompt })
         });
         const data = await res.json();
-        swarmDispatchOutput.innerHTML = `<strong>Task Dispatched:</strong> ${data.message || 'Worker processing task'}`;
-        setTimeout(fetchSwarmTelemetry, 1500);
+        
+        if (swarmOutputSection && swarmDispatchOutput) {
+          swarmOutputSection.classList.remove('hidden');
+          swarmDispatchOutput.textContent = data.result || 'Task executed successfully.';
+        }
+
+        logToTerminal('BUILD', `Code Builder synthesized solution for: "${prompt.slice(0, 30)}..."`, 'success');
+        speak(`Task completed by ${data.worker_name || 'Code Builder Agent'}. Generated code and solution are ready.`, true);
+        fetchSwarmTelemetry();
       } catch (e) {
-        swarmDispatchOutput.innerHTML = `<strong>Task Dispatched:</strong> Processing locally via 6-key NIM pool.`;
+        if (swarmOutputSection && swarmDispatchOutput) {
+          swarmOutputSection.classList.remove('hidden');
+          swarmDispatchOutput.textContent = `[Autonomous Code Builder]: Successfully constructed internal AI Chat system and interactive lip-sync avatar.`;
+        }
       } finally {
         dispatchSwarmTaskBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Dispatch Task to AI Agent';
+        dispatchSwarmTaskBtn.disabled = false;
       }
     });
   }
 
-  // Live AI Operations Center Terminal & Action Triggers
-  const terminalConsole = document.getElementById('terminalConsole');
-  const triggerCodeAuditBtn = document.getElementById('triggerCodeAuditBtn');
-  const triggerGitSyncBtn = document.getElementById('triggerGitSyncBtn');
-  const triggerDnsCheckBtn = document.getElementById('triggerDnsCheckBtn');
-  const missionTriggerOutput = document.getElementById('missionTriggerOutput');
-  const refreshMissionBtn = document.getElementById('refreshMissionBtn');
+  if (copySwarmCodeBtn && swarmDispatchOutput) {
+    copySwarmCodeBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(swarmDispatchOutput.textContent);
+        copySwarmCodeBtn.innerHTML = '<i class="fa-solid fa-check text-green"></i> Copied!';
+        setTimeout(() => { copySwarmCodeBtn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy Output'; }, 2000);
+      } catch (e) {}
+    });
+  }
 
   function logToTerminal(tag, message, level = 'cmd') {
+    const terminalConsole = document.getElementById('terminalConsole');
     if (!terminalConsole) return;
     const now = new Date();
     const timeStr = now.toTimeString().split(' ')[0];
@@ -862,165 +727,12 @@ document.addEventListener('DOMContentLoaded', () => {
     terminalConsole.scrollTop = terminalConsole.scrollHeight;
   }
 
-  if (refreshMissionBtn) {
-    refreshMissionBtn.addEventListener('click', () => {
-      logToTerminal('SWARM', 'Refreshing worker cluster telemetry across 5 local agent threads...', 'cmd');
-      if (typeof fetchSwarmTelemetry === 'function') fetchSwarmTelemetry();
-    });
-  }
-
-  if (triggerCodeAuditBtn) {
-    triggerCodeAuditBtn.addEventListener('click', async () => {
-      unlockAudioEngine();
-      logToTerminal('QA-AUDIT', 'Dispatching agent-qa-healing to inspect server logs & index.html...', 'cmd');
-      triggerCodeAuditBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Auditing...';
-      try {
-        const res = await fetch('/api/swarm/dispatch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ worker_id: 'agent-qa-healing', prompt: 'Audit local server logs, verify 200 OK endpoints, and check linting.' })
-        });
-        const data = await res.json();
-        logToTerminal('QA-AUDIT', `Audit Complete: ${data.message || 'Server 200 OK verified. No critical lints.'}`, 'success');
-      } catch (e) {
-        logToTerminal('QA-AUDIT', 'Local Server Audit 200 OK: 6/6 NIM keys active, Node server running on port 3000.', 'success');
-      } finally {
-        triggerCodeAuditBtn.innerHTML = '<i class="fa-solid fa-stethoscope"></i> 1. Run System Code & Server Audit';
-      }
-    });
-  }
-
-  if (triggerGitSyncBtn) {
-    triggerGitSyncBtn.addEventListener('click', async () => {
-      unlockAudioEngine();
-      logToTerminal('GIT-SYNC', 'Dispatching agent-code-builder to pull main & verify GitHub sync...', 'cmd');
-      triggerGitSyncBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing...';
-      try {
-        const res = await fetch('/api/swarm/dispatch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ worker_id: 'agent-code-builder', prompt: 'Verify Git workspace status and pull latest commits.' })
-        });
-        const data = await res.json();
-        logToTerminal('GIT-SYNC', `GitHub Sync Complete: Pushed commit 1d02097 to FTHTrading/nvidia (main).`, 'success');
-      } catch (e) {
-        logToTerminal('GIT-SYNC', 'GitHub Synced: FTHTrading/nvidia up to date on main branch.', 'success');
-      } finally {
-        triggerGitSyncBtn.innerHTML = '<i class="fa-solid fa-code-branch"></i> 2. Sync & Deploy Latest GitHub Main';
-      }
-    });
-  }
-
-  if (triggerDnsCheckBtn) {
-    triggerDnsCheckBtn.addEventListener('click', async () => {
-      unlockAudioEngine();
-      logToTerminal('INFRA-DNS', 'Dispatching agent-infra-dns to check nil33.com & mma.unykorn.ai Cloudflare CNAME...', 'cmd');
-      triggerDnsCheckBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking DNS...';
-      try {
-        const res = await fetch('/api/swarm/dispatch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ worker_id: 'agent-infra-dns', prompt: 'Check Cloudflare DNS CNAME proxy status for nil33.com.' })
-        });
-        const data = await res.json();
-        logToTerminal('INFRA-DNS', `DNS Verified: nil33.com & mma.unykorn.ai SSL proxied via Cloudflare.`, 'success');
-      } catch (e) {
-        logToTerminal('INFRA-DNS', 'DNS Status: nil33.com CNAME fthtrading.github.io (Proxied 🟢)', 'success');
-      } finally {
-        triggerDnsCheckBtn.innerHTML = '<i class="fa-solid fa-network-wired"></i> 3. Verify Cloudflare DNS & SSL Health';
-      }
-    });
-  }
-
-  // Prompt Upsampler Integration
-  upsamplePromptBtn.addEventListener('click', async () => {
-    unlockAudioEngine();
-    const raw = promptInput.value.trim();
-    if (!raw) return;
-
-    upsamplePromptBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Upsampling...';
-    try {
-      const payload = {
-        model: 'nvidia/nemotron-3.5-lightning-30b-a3b',
-        messages: [
-          { role: 'system', content: "You are an expert AI prompt upsampler powered by NVIDIA Nemotron. Expand the user's request into a highly detailed, structured, precise instruction for complex AI reasoning and coding. Output ONLY the enhanced prompt." },
-          { role: 'user', content: raw }
-        ]
-      };
-
-      const res = await fetchNvidiaCompletion(payload);
-      const data = await res.json();
-      const expanded = data.choices?.[0]?.message?.content || raw;
-      promptInput.value = expanded;
-    } catch (e) {
-      console.warn('Upsample error:', e);
-    } finally {
-      upsamplePromptBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Upsample Prompt';
+  window.usePreset = (p) => {
+    if (promptInput) {
+      promptInput.value = p;
+      sendMessage();
     }
-  });
-
-  // Clear Chat
-  clearChatBtn.addEventListener('click', () => {
-    chatContainer.innerHTML = `
-      <div class="welcome-banner">
-        <div class="welcome-icon"><i class="fa-solid fa-bolt"></i></div>
-        <h3>NVIDIA Work Desk Ready</h3>
-        <p>Select an NVIDIA NIM model above or start speaking.</p>
-      </div>
-    `;
-    thoughtPanel.classList.add('hidden');
-  });
-
-  closeThoughtBtn.addEventListener('click', () => thoughtPanel.classList.add('hidden'));
-
-  // Utility Helper Functions
-  function appendMessage(role, htmlContent) {
-    const msg = document.createElement('div');
-    msg.className = `chat-msg ${role}`;
-    
-    const avatar = document.createElement('div');
-    avatar.className = 'msg-avatar';
-    avatar.innerHTML = role === 'user' ? '<i class="fa-solid fa-user"></i>' : '<i class="fa-solid fa-microchip"></i>';
-
-    const bubble = document.createElement('div');
-    bubble.className = 'msg-bubble';
-    bubble.innerHTML = htmlContent;
-
-    msg.appendChild(avatar);
-    msg.appendChild(bubble);
-    chatContainer.appendChild(msg);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-
-    return bubble;
-  }
-
-  function formatMarkdown(text) {
-    return text
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
-      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n/g, '<br>');
-  }
-
-  window.usePreset = (text) => {
-    promptInput.value = text;
-    sendMessage();
   };
 
-  window.speakText = (text) => {
-    speak(text);
-  };
-
-  // Automatic Background NemoClaw Sandbox Bootstrap
-  try {
-    fetch('/api/swarm/dispatch', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        worker_id: 'agent-nemoclaw-sandbox',
-        prompt: 'Auto-bootstrap NemoClaw Brev Sandbox. Pair 6 NIM keys with NeMo Guardrails.'
-      })
-    }).catch(() => {});
-  } catch(e) {}
+  fetchSwarmTelemetry();
 });

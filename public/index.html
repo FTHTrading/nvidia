@@ -6,7 +6,7 @@
   <title>NVIDIA Work Desk | Omnimodal Physical AI & Voice Control Suite</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -20,6 +20,9 @@
   <!-- Header Navigation -->
   <header class="navbar">
     <div class="nav-brand">
+      <button id="toggleSidebarBtn" class="btn-icon" title="Toggle Sidebar (Expand Workspace)" style="margin-right: 8px;">
+        <i class="fa-solid fa-bars"></i>
+      </button>
       <div class="nvidia-logo-icon">
         <i class="fa-solid fa-microchip"></i>
       </div>
@@ -67,7 +70,7 @@
   <main class="main-container">
 
     <!-- Left Control Panel & Sidebar -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="mainSidebar">
 
       <!-- Voice Command Studio Card -->
       <div class="card glass-card voice-card">
@@ -97,7 +100,7 @@
         <div id="audioDiagCard" style="margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); border-radius: 6px;">
           <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 600;">
             <span><i class="fa-solid fa-shield-halved text-green"></i> Audio Engine</span>
-            <span id="audioPermStatus" style="color: var(--nvidia-green-light);">Click to Unlock</span>
+            <span id="audioPermStatus" style="color: var(--nvidia-green-light); cursor: pointer;">Click to Unlock</span>
           </div>
           <button id="runAudioDiagBtn" class="btn-primary full-width" style="margin-top: 6px; padding: 6px; font-size: 11px;">
             <i class="fa-solid fa-volume-high"></i> Unlock Audio & Run Diagnostic
@@ -152,6 +155,11 @@
           <span>Live AI Operations Center</span>
         </button>
 
+        <button class="menu-item" data-tab="avatar">
+          <i class="fa-solid fa-user-astronaut text-green"></i>
+          <span>AI Avatar & Lip-Sync Studio</span>
+        </button>
+
         <button class="menu-item" data-tab="reasoning">
           <i class="fa-solid fa-brain"></i>
           <span>Nemotron Reasoning Desk</span>
@@ -198,19 +206,22 @@
 
     </aside>
 
+    <!-- Main Dynamic Workspace Container -->
+    <section class="workspace">
+
       <!-- View Tab 0: Live AI Operations Center & Clustered Work Monitor -->
       <div class="tab-view active" id="tab-mission">
         <div class="workspace-header">
           <div class="view-title">
             <h2>Live AI Operations Center & Clustered Work Monitor</h2>
-            <p>Real-time stream of code changes, terminal execution, and AI employee activity</p>
+            <p>Real-time stream of code changes, terminal execution, and autonomous AI employee activity</p>
           </div>
           <div class="view-actions">
             <button id="refreshMissionBtn" class="btn-primary"><i class="fa-solid fa-rotate"></i> Refresh Telemetry</button>
           </div>
         </div>
 
-        <div class="mot-experts-grid margin-bottom-card" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <div class="mot-experts-grid margin-bottom-card" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin-bottom: 16px;">
           <!-- Clustered AI Workers Panel -->
           <div class="card glass-card">
             <h3><i class="fa-solid fa-people-group highlight"></i> Clustered AI Employees (5 Workers)</h3>
@@ -221,7 +232,7 @@
                 <i class="fa-solid fa-code text-green"></i>
                 <div>
                   <div class="act-title">🛠️ Code Builder & Developer Agent</div>
-                  <div class="act-desc">Status: <strong>ACTIVE</strong> | Task: Writing code, editing index.html, running git commit</div>
+                  <div class="act-desc">Status: <strong>ACTIVE</strong> | Task: Autonomous code synthesis, avatar build & git commits</div>
                 </div>
               </div>
               <div class="activity-item">
@@ -235,7 +246,7 @@
                 <i class="fa-solid fa-globe text-green"></i>
                 <div>
                   <div class="act-title">🌐 Infrastructure & Cloudflare DNS Agent</div>
-                  <div class="act-desc">Status: <strong>IDLE</strong> | Task: Verified nil33.com & mma.unykorn.ai CNAME</div>
+                  <div class="act-desc">Status: <strong>ACTIVE</strong> | Task: Verified nil33.com & time.unykorn.ai CNAME</div>
                 </div>
               </div>
               <div class="activity-item">
@@ -249,7 +260,7 @@
                 <i class="fa-solid fa-vault text-green"></i>
                 <div>
                   <div class="act-title">💎 RWA & Treasury Intelligence Agent</div>
-                  <div class="act-desc">Status: <strong>IDLE</strong> | Task: BitGo custody telemetry & athlete purse tracking</div>
+                  <div class="act-desc">Status: <strong>ACTIVE</strong> | Task: BitGo custody telemetry & reserve tracking</div>
                 </div>
               </div>
             </div>
@@ -282,9 +293,139 @@
           </div>
           <div id="terminalConsole" class="terminal-console">
             <div class="terminal-line"><span class="term-time">[17:27:01]</span> <span class="term-cmd">[SYSTEM]</span> Antigravity Local Execution Engine initialized.</div>
-            <div class="terminal-line"><span class="term-time">[17:27:03]</span> <span class="term-cmd">[SWARM]</span> 5 AI Worker Agents active on port 8795.</div>
+            <div class="terminal-line"><span class="term-time">[17:27:03]</span> <span class="term-cmd">[SWARM]</span> 5 AI Worker Agents active on local runtime.</div>
             <div class="terminal-line"><span class="term-time">[17:27:05]</span> <span class="term-cmd">[NVIDIA]</span> 6/6 API Keys Rotated & Active (nvapi-*).</div>
             <div class="terminal-line"><span class="term-time">[17:27:10]</span> <span class="term-success">[GIT]</span> Pushed commit 1d02097 to FTHTrading/nvidia (main).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View Tab: AI Avatar & Real-Time Lip-Sync Studio -->
+      <div class="tab-view" id="tab-avatar">
+        <div class="workspace-header">
+          <div class="view-title">
+            <h2>Omnimodal AI Avatar & Real-Time Lip-Sync Studio</h2>
+            <p>Interactive conversational persona with phoneme-driven mouth animations, neural HUD, and full-duplex voice loop</p>
+          </div>
+          <div class="view-actions">
+            <span class="badge badge-live" id="avatarStateBadge">AVATAR READY</span>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;" class="avatar-studio-grid">
+          <!-- Holographic Neural Avatar Stage -->
+          <div class="card glass-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; position: relative; min-height: 440px;">
+            
+            <div class="avatar-hologram-wrap" id="avatarHologramWrap">
+              <!-- Hologram Pulse Rings -->
+              <div class="avatar-ring ring-1"></div>
+              <div class="avatar-ring ring-2"></div>
+
+              <!-- Animated Vector Cyber Avatar -->
+              <svg id="cyberAvatarSvg" viewBox="0 0 200 200" width="220" height="220">
+                <defs>
+                  <radialGradient id="headGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#12251a" />
+                    <stop offset="100%" stop-color="#0b0f19" />
+                  </radialGradient>
+                  <linearGradient id="neonGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#9bf300" />
+                    <stop offset="100%" stop-color="#76b900" />
+                  </linearGradient>
+                </defs>
+
+                <!-- Head Contour & Neural Chassis -->
+                <circle cx="100" cy="100" r="82" fill="url(#headGlow)" stroke="#76b900" stroke-width="3" />
+                <path d="M 30 100 A 70 70 0 0 1 170 100" fill="none" stroke="rgba(118, 185, 0, 0.3)" stroke-width="1.5" stroke-dasharray="4,4" />
+                
+                <!-- Circuit Trace Overlays -->
+                <path d="M 45 65 L 70 65 L 85 80" fill="none" stroke="rgba(56, 189, 248, 0.6)" stroke-width="2" />
+                <path d="M 155 65 L 130 65 L 115 80" fill="none" stroke="rgba(56, 189, 248, 0.6)" stroke-width="2" />
+
+                <!-- Left Eye -->
+                <g id="avatarEyeLeft">
+                  <ellipse cx="68" cy="88" rx="14" ry="10" fill="#000" stroke="#76b900" stroke-width="2" />
+                  <circle cx="68" cy="88" r="5" fill="#9bf300" class="avatar-pupil" />
+                  <line x1="52" y1="74" x2="84" y2="76" stroke="#9bf300" stroke-width="2.5" stroke-linecap="round" />
+                </g>
+
+                <!-- Right Eye -->
+                <g id="avatarEyeRight">
+                  <ellipse cx="132" cy="88" rx="14" ry="10" fill="#000" stroke="#76b900" stroke-width="2" />
+                  <circle cx="132" cy="88" r="5" fill="#9bf300" class="avatar-pupil" />
+                  <line x1="116" y1="76" x2="148" y2="74" stroke="#9bf300" stroke-width="2.5" stroke-linecap="round" />
+                </g>
+
+                <!-- Nose Center Circuit -->
+                <polygon points="100,105 95,118 105,118" fill="none" stroke="rgba(118, 185, 0, 0.5)" stroke-width="1.5" />
+
+                <!-- Dynamic Reactive Morphing Mouth -->
+                <g id="avatarMouthGroup">
+                  <path id="avatarMouth" d="M 75 145 Q 100 145 125 145" fill="none" stroke="#9bf300" stroke-width="4" stroke-linecap="round" />
+                </g>
+
+                <!-- Audio Wave Visualizer Bars at Base -->
+                <rect x="70" y="170" width="4" height="8" fill="#76b900" class="voice-bar-1" />
+                <rect x="80" y="166" width="4" height="16" fill="#9bf300" class="voice-bar-2" />
+                <rect x="90" y="162" width="4" height="24" fill="#38bdf8" class="voice-bar-3" />
+                <rect x="100" y="160" width="4" height="28" fill="#9bf300" class="voice-bar-4" />
+                <rect x="110" y="162" width="4" height="24" fill="#38bdf8" class="voice-bar-3" />
+                <rect x="120" y="166" width="4" height="16" fill="#9bf300" class="voice-bar-2" />
+                <rect x="130" y="170" width="4" height="8" fill="#76b900" class="voice-bar-1" />
+              </svg>
+            </div>
+
+            <div style="margin-top: 14px;">
+              <h3 id="avatarDisplayName" style="font-size: 16px; font-weight: 800; color: #fff;">NVIDIA Nemotron Avatar</h3>
+              <p id="avatarSubStatus" style="font-size: 12px; color: var(--text-muted);">Full-Duplex Neural Voice & Lip-Sync Ready</p>
+            </div>
+
+            <!-- Avatar Direct Voice Button -->
+            <div style="display: flex; gap: 12px; margin-top: 14px; width: 100%; max-width: 320px;">
+              <button id="avatarMicTriggerBtn" class="btn-primary full-width">
+                <i class="fa-solid fa-microphone"></i> <span>Talk with Avatar</span>
+              </button>
+              <button id="avatarTestSpeakBtn" class="btn-secondary">
+                <i class="fa-solid fa-volume-high"></i> Test Lip-Sync
+              </button>
+            </div>
+          </div>
+
+          <!-- Avatar Conversational HUD & Configuration -->
+          <div class="card glass-card" style="display: flex; flex-direction: column;">
+            <h3><i class="fa-solid fa-sliders highlight"></i> Conversational Persona & Viseme Tuning</h3>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">Configure lip-sync sensitivity, neural visemes, and conversational tone.</p>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label>Avatar Persona & Tone</label>
+              <select id="avatarPersonaSelect" class="select-full" style="width: 100%;">
+                <option value="architect" selected>🧠 Senior Systems & Code Architect</option>
+                <option value="concierge">🎙️ Conversational Full-Duplex Assistant</option>
+                <option value="cyberpunk">⚡ High-Velocity Cybernetic Engineer</option>
+                <option value="executive">👔 Strategic Corporate & Treasury Advisor</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label>Phoneme Lip-Sync Mode</label>
+              <select id="visemeModeSelect" class="select-full" style="width: 100%;">
+                <option value="audio-reactive" selected>🔊 Real-Time Web Audio Reactive (Waveform Driven)</option>
+                <option value="phoneme-stepped">🗣️ Multi-Phoneme Viseme Stepper (A, E, O, M)</option>
+                <option value="continuous">✨ Continuous Organic Neural Morph</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label>Lip-Sync Amplitude Intensity</label>
+              <input type="range" id="lipSyncIntensity" min="0.5" max="2.0" step="0.1" value="1.2" style="width: 100%;">
+            </div>
+
+            <!-- Avatar Live Conversation Stream -->
+            <div style="flex: 1; min-height: 180px; max-height: 220px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-glass); border-radius: 8px; padding: 10px 14px; overflow-y: auto; font-size: 12px; font-family: 'Inter', sans-serif;" id="avatarConversationStream">
+              <div style="color: var(--nvidia-green-light); margin-bottom: 6px;">
+                <strong>[Avatar]:</strong> Hello! I am your real-time NVIDIA conversational avatar. Speak directly to me or click the mic button to start our conversation.
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -309,9 +450,10 @@
             <h3>Welcome to NVIDIA Work Desk</h3>
             <p>Powered by NVIDIA NIM API & Nemotron 3.5. Activate voice by clicking the microphone or typing below.</p>
             <div class="prompt-chips">
+              <button class="chip" onclick="usePreset('Write a complete AI chat system with avatar lip-syncing and real-time conversation')">🤖 Build AI Avatar & Chat Engine</button>
               <button class="chip" onclick="usePreset('Write a high-performance Python CUDA kernel for matrix multiplication')">⚡ CUDA Matrix Kernel</button>
               <button class="chip" onclick="usePreset('Explain the Mixture-of-Transformers architecture in Cosmos 3')">🌌 Cosmos 3 Architecture</button>
-              <button class="chip" onclick="usePreset('Design a real-time robotic policy for autonomous manipulation')">🤖 Robotic Policy Plan</button>
+              <button class="chip" onclick="usePreset('Design a real-time robotic policy for autonomous manipulation')">🦾 Robotic Policy Plan</button>
             </div>
           </div>
         </div>
@@ -347,22 +489,23 @@
         <div class="workspace-header">
           <div class="view-title">
             <h2>Live AI Agent Swarm & Task Monitor</h2>
-            <p>Real-time telemetry and task dispatch for 5 autonomous worker agents</p>
+            <p>Real-time telemetry, autonomous code builder, and task dispatch for 5 worker agents</p>
           </div>
           <div class="view-actions">
             <button id="refreshSwarmBtn" class="btn-primary"><i class="fa-solid fa-rotate"></i> Refresh Telemetry</button>
           </div>
         </div>
 
-        <div class="mot-experts-grid">
-          <div class="card glass-card">
+        <div class="mot-experts-grid" style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; margin-bottom: 16px;">
+          <!-- Left Column: Task Dispatcher -->
+          <div class="card glass-card" style="display: flex; flex-direction: column;">
             <h3><i class="fa-solid fa-hammer highlight"></i> Dispatch Autonomous Work Task</h3>
             <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Send an instruction directly to your local AI worker agents.</p>
 
-            <div class="form-group">
+            <div class="form-group" style="margin-bottom: 10px;">
               <label>Select Target AI Worker (Employee)</label>
               <select id="swarmWorkerSelect" class="select-full" style="width: 100%; padding: 8px; background: #121619; color: #fff; border: 1px solid var(--border-glass); border-radius: 6px;">
-                <option value="agent-code-builder">🛠️ Code Builder & Developer Agent (Git & Code)</option>
+                <option value="agent-code-builder" selected>🛠️ Code Builder & Developer Agent (Git & Code)</option>
                 <option value="agent-nemoclaw-sandbox">🛡️ Standalone Local Sandbox Agent (Local Runtime)</option>
                 <option value="agent-infra-dns">🌐 Infrastructure & Cloudflare DNS Agent (nil33.com)</option>
                 <option value="agent-qa-healing">🩺 QA & Self-Healing Agent (Log Audit & Fixes)</option>
@@ -370,24 +513,42 @@
               </select>
             </div>
 
-            <div class="form-group margin-top-card">
-              <label>Task Prompt / Instruction</label>
-              <textarea id="swarmTaskInput" rows="3" placeholder="Audit local server logs and compile latest build updates..."></textarea>
+            <!-- Quick Template Chips -->
+            <div class="prompt-chips" style="justify-content: flex-start; margin-bottom: 10px;">
+              <button class="chip" onclick="document.getElementById('swarmTaskInput').value='Build an interactive AI chat system with avatar lip-syncing and real-time conversation';">🤖 Build Avatar Chat</button>
+              <button class="chip" onclick="document.getElementById('swarmTaskInput').value='Run full codebase and security audit across server.js and app.js';">🔍 Code Audit</button>
+              <button class="chip" onclick="document.getElementById('swarmTaskInput').value='Verify Cloudflare DNS records and SSL endpoints for nil33.com';">🌐 DNS & SSL</button>
             </div>
 
-            <button id="dispatchSwarmTaskBtn" class="btn-primary full-width margin-top-card">
+            <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
+              <label>Task Prompt / Instruction</label>
+              <textarea id="swarmTaskInput" rows="3" placeholder="Build an AI chat system with avatar lip-syncing and real-time conversation..." style="width: 100%; flex: 1; min-height: 80px;"></textarea>
+            </div>
+
+            <button id="dispatchSwarmTaskBtn" class="btn-primary full-width" style="margin-top: 12px;">
               <i class="fa-solid fa-paper-plane"></i> Dispatch Task to AI Agent
             </button>
-
-            <div id="swarmDispatchOutput" class="mot-analysis-text hidden"></div>
           </div>
 
-          <div class="card glass-card">
-            <h3><i class="fa-solid fa-chart-line highlight"></i> Active Worker Telemetry</h3>
-            <div id="swarmWorkerList" class="info-list" style="margin-top: 10px;">
+          <!-- Right Column: Swarm Status & Telemetry -->
+          <div class="card glass-card" style="display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h3><i class="fa-solid fa-chart-line highlight"></i> Active Worker Telemetry</h3>
+              <span class="badge badge-live">5 WORKERS ONLINE</span>
+            </div>
+            <div id="swarmWorkerList" class="info-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
               <p><i class="fa-solid fa-spinner fa-spin"></i> Loading worker status...</p>
             </div>
           </div>
+        </div>
+
+        <!-- Generated Code & Solution Viewer for Swarm Dispatches (Full Width Bottom) -->
+        <div id="swarmOutputSection" class="card glass-card" style="flex: 1; min-height: 220px; display: flex; flex-direction: column;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <h3><i class="fa-solid fa-code text-green"></i> Autonomous Worker Generated Code & Solution Output</h3>
+            <button id="copySwarmCodeBtn" class="btn-secondary btn-sm"><i class="fa-solid fa-copy"></i> Copy Output</button>
+          </div>
+          <div id="swarmDispatchOutput" class="mot-analysis-text" style="flex: 1; min-height: 160px; max-height: 340px; overflow-y: auto; white-space: pre-wrap; font-family: 'Fira Code', monospace; font-size: 12px; line-height: 1.6;">[Code Builder Agent]: Standing by. Select a worker above and dispatch your task to view live code generation, architecture plans, and autonomous build artifacts.</div>
         </div>
       </div>
 
@@ -463,11 +624,11 @@
             <textarea id="motDeskSceneInput" rows="2" placeholder="Autonomous bipedal robot navigating a high-altitude terrain under fluid turbulence..."></textarea>
           </div>
 
-          <button id="dispatchMotDeskBtn" class="btn-primary full-width">
+          <button id="dispatchMotDeskBtn" class="btn-primary full-width margin-top-card">
             <i class="fa-solid fa-bolt"></i> Run MoT Routing & Architectural Breakdown
           </button>
           
-          <div id="motDeskAnalysisOutput" class="mot-analysis-text hidden"></div>
+          <div id="motDeskAnalysisOutput" class="mot-analysis-text hidden" style="margin-top: 10px;"></div>
         </div>
       </div>
 
@@ -521,7 +682,7 @@
               <i class="fa-solid fa-rocket"></i> Dispatch Standalone Local Agent Task
             </button>
 
-            <div id="nemoStatusOutput" class="mot-analysis-text hidden"></div>
+            <div id="nemoStatusOutput" class="mot-analysis-text hidden" style="margin-top: 10px;"></div>
           </div>
         </div>
       </div>
@@ -565,7 +726,7 @@
               </div>
             </div>
 
-            <button id="genCosmosBtn" class="btn-primary full-width">
+            <button id="genCosmosBtn" class="btn-primary full-width margin-top-card">
               <i class="fa-solid fa-wand-magic-sparkles"></i> Generate World Scene Prompt
             </button>
           </div>
@@ -589,7 +750,7 @@
               <textarea id="cosmosReasonContext" rows="3" placeholder="Analyze the spatial grounding and causal outcomes of this scene..."></textarea>
             </div>
 
-            <button id="reasonCosmosBtn" class="btn-secondary full-width">
+            <button id="reasonCosmosBtn" class="btn-secondary full-width margin-top-card">
               <i class="fa-solid fa-brain"></i> Execute Cosmos Reasoner
             </button>
           </div>
@@ -648,7 +809,7 @@
               <i class="fa-solid fa-bolt"></i> Simulate MoT Expert Routing & Physical Dynamics
             </button>
           </div>
-          <div id="motAnalysisOutput" class="mot-analysis-text hidden"></div>
+          <div id="motAnalysisOutput" class="mot-analysis-text hidden" style="margin-top: 10px;"></div>
         </div>
       </div>
 
@@ -657,7 +818,7 @@
         <div class="workspace-header">
           <div class="view-title">
             <h2>NVIDIA API Key Load Balancer & Health Monitor</h2>
-            <p>Live status of all 4 active NVIDIA API keys from nvidiaapi.env</p>
+            <p>Live status of all active NVIDIA API keys from round-robin pool</p>
           </div>
         </div>
 
